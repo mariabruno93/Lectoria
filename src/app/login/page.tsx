@@ -70,7 +70,7 @@ function LoginForm() {
           {tab === 'registro' && (
             <div>
               <label className="block text-xs mb-1.5" style={{ color: '#8A8478' }}>Nombre</label>
-              <input value={name} onChange={e => setName(e.target.value)}
+              <input required value={name} onChange={e => setName(e.target.value)}
                 placeholder="Tu nombre" className={INPUT} style={INPUT_STYLE} />
             </div>
           )}
