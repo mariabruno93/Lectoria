@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 // @ts-ignore
-import pdfParse from 'pdf-parse/lib/pdf-parse.js';
+import pdfParse from 'pdf-parse';
 
 // Detecta capítulos por patrones comunes en ES e EN
 function detectChapters(text: string): Array<{ number: number; title: string; text: string }> {

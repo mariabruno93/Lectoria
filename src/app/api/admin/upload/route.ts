@@ -2,7 +2,7 @@ import { createAdminClient } from '@/lib/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(req: NextRequest) {
-  const supabase = createAdminClient();
+  const supabase = await createAdminClient();
   const form = await req.formData();
   const file = form.get('file') as File;
   const bucket = (form.get('bucket') as string) ?? 'covers';
