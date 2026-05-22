@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
   const audioBuffer = Buffer.concat(chunks);
 
   // Subir a Supabase Storage
-  const supabase = await createAdminClient();
+  const supabase = createAdminClient();
   const path = `${workSlug}/${chapterNumber}.mp3`;
   const { error } = await supabase.storage
     .from('audio')

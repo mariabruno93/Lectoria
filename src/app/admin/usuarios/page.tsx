@@ -1,7 +1,7 @@
 import { createAdminClient } from '@/lib/supabase/server';
 
 export default async function UsuariosPage() {
-  const supabase = await createAdminClient();
+  const supabase = createAdminClient();
 
   const { data: { users }, error } = await supabase.auth.admin.listUsers();
 
