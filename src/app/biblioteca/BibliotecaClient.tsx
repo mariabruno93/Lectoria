@@ -76,7 +76,7 @@ export default function BibliotecaClient({ allBooks }: { allBooks: any[] }) {
               </p>
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5">
                 {results.map((book) => (
-                  <BookCard key={book.slug} book={book} />
+                  <BookCard key={book.slug} work={book} />
                 ))}
               </div>
             </>
@@ -96,7 +96,7 @@ export default function BibliotecaClient({ allBooks }: { allBooks: any[] }) {
             </h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5">
               {esResults.map((book) => (
-                <BookCard key={book.slug} book={book} />
+                <BookCard key={book.slug} work={book} />
               ))}
             </div>
           </section>
@@ -110,7 +110,7 @@ export default function BibliotecaClient({ allBooks }: { allBooks: any[] }) {
             </h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5">
               {enResults.map((book) => (
-                <BookCard key={book.slug} book={book} />
+                <BookCard key={book.slug} work={book} />
               ))}
             </div>
           </section>
