@@ -42,7 +42,7 @@ export const books: Book[] = [
     coverGradient: { from: '#7C2D12', to: '#1C0A00' },
     featured: true,
     chapters: [
-      { id: 1, title: 'Capítulo I — Que trata de la condición del famoso hidalgo', duration: '18:32' },
+      { id: 1, title: 'Capítulo I — Que trata de la condición del famoso hidalgo', duration: '11:02', audioUrl: '/audio/don-quijote/1.mp3' },
       { id: 2, title: 'Capítulo II — De la primera salida que de su tierra hizo', duration: '22:10' },
       { id: 3, title: 'Capítulo III — La manera que tuvo Don Quijote en armarse caballero', duration: '15:44' },
     ],
