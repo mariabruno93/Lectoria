@@ -1,5 +1,5 @@
 import { Metadata } from 'next';
-import { books } from '@/lib/books';
+import { createClient } from '@/lib/supabase/server';
 import BibliotecaClient from './BibliotecaClient';
 
 export const metadata: Metadata = {
@@ -7,7 +7,16 @@ export const metadata: Metadata = {
   description: 'Todos los audiolibros disponibles en Lectoria. Clásicos de la literatura en español e inglés.',
 };
 
-export default function BibliotecaPage() {
+export default async function BibliotecaPage() {
+  const supabase = await createClient();
+  const { data: works } = await supabase
+    .from('works')
+    .select('*, authors(name, slug)')
+    .order('language', { ascending: true })
+    .order('title', { ascending: true });
+
+  const allWorks = works ?? [];
+
   return (
     <div className="max-w-6xl mx-auto px-6 py-14">
       <div className="mb-10">
@@ -15,10 +24,10 @@ export default function BibliotecaPage() {
           Biblioteca
         </h1>
         <p style={{ color: '#8A8478' }}>
-          {books.length} títulos · Dominio público · Gratis
+          {allWorks.length} títulos · Dominio público · Gratis
         </p>
       </div>
-      <BibliotecaClient allBooks={books} />
+      <BibliotecaClient allBooks={allWorks} />
     </div>
   );
 }

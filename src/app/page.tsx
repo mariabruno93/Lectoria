@@ -1,10 +1,21 @@
 import Link from 'next/link';
 import BookCard from '@/components/BookCard';
-import { books, getFeaturedBooks } from '@/lib/books';
+import { createClient } from '@/lib/supabase/server';
 
-export default function Home() {
-  const featured = getFeaturedBooks();
-  const rest = books.filter((b) => !b.featured);
+export default async function Home() {
+  const supabase = await createClient();
+
+  const { data: featured } = await supabase
+    .from('works')
+    .select('*, authors(name, slug)')
+    .eq('featured', true)
+    .order('created_at', { ascending: false });
+
+  const { data: rest } = await supabase
+    .from('works')
+    .select('*, authors(name, slug)')
+    .eq('featured', false)
+    .order('created_at', { ascending: false });
 
   return (
     <div>
@@ -53,31 +64,33 @@ export default function Home() {
       </section>
 
       {/* Featured books */}
-      <section className="max-w-6xl mx-auto px-6 py-16">
-        <div className="flex items-center justify-between mb-8">
-          <h2
-            className="text-2xl font-semibold"
-            style={{ fontFamily: 'Georgia, serif', color: '#F2EDE4' }}
-          >
-            Títulos destacados
-          </h2>
-          <Link
-            href="/biblioteca"
-            className="text-sm hover:opacity-80 transition-opacity"
-            style={{ color: '#C9933A' }}
-          >
-            Ver todos →
-          </Link>
-        </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-5">
-          {featured.map((book) => (
-            <BookCard key={book.slug} book={book} />
-          ))}
-        </div>
-      </section>
+      {featured && featured.length > 0 && (
+        <section className="max-w-6xl mx-auto px-6 py-16">
+          <div className="flex items-center justify-between mb-8">
+            <h2
+              className="text-2xl font-semibold"
+              style={{ fontFamily: 'Georgia, serif', color: '#F2EDE4' }}
+            >
+              Títulos destacados
+            </h2>
+            <Link
+              href="/biblioteca"
+              className="text-sm hover:opacity-80 transition-opacity"
+              style={{ color: '#C9933A' }}
+            >
+              Ver todos →
+            </Link>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-5">
+            {featured.map((work: any) => (
+              <BookCard key={work.slug} work={work} />
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Rest of catalog */}
-      {rest.length > 0 && (
+      {rest && rest.length > 0 && (
         <section className="max-w-6xl mx-auto px-6 pb-16">
           <h2
             className="text-lg font-semibold mb-6"
@@ -86,8 +99,8 @@ export default function Home() {
             También disponibles
           </h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-5">
-            {rest.map((book) => (
-              <BookCard key={book.slug} book={book} />
+            {rest.map((work: any) => (
+              <BookCard key={work.slug} work={work} />
             ))}
           </div>
         </section>

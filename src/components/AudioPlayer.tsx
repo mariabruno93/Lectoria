@@ -41,7 +41,7 @@ export default function AudioPlayer() {
         <div
           className="w-10 h-10 rounded-lg flex-shrink-0"
           style={{
-            background: `linear-gradient(135deg, ${book.coverGradient.from}, ${book.coverGradient.to})`,
+            background: `linear-gradient(135deg, ${book.cover_gradient_from}, ${book.cover_gradient_to})`,
           }}
         />
 

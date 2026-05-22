@@ -8,18 +8,32 @@ import {
   useCallback,
   ReactNode,
 } from 'react';
-import { Book, Chapter } from '@/lib/books';
+
+// Campos mínimos que necesita el player (compatibles con el tipo Work de Supabase)
+export interface PlayerBook {
+  slug: string;
+  title: string;
+  cover_gradient_from: string;
+  cover_gradient_to: string;
+}
+
+export interface PlayerChapter {
+  id: string;
+  title: string;
+  audio_url: string | null;
+  duration_label: string | null;
+}
 
 interface PlayerState {
-  book: Book | null;
-  chapter: Chapter | null;
+  book: PlayerBook | null;
+  chapter: PlayerChapter | null;
   isPlaying: boolean;
   currentTime: number;
   duration: number;
 }
 
 interface PlayerContextType extends PlayerState {
-  play: (book: Book, chapter: Chapter) => void;
+  play: (book: PlayerBook, chapter: PlayerChapter) => void;
   togglePlay: () => void;
   seek: (time: number) => void;
   setDuration: (d: number) => void;
@@ -38,11 +52,11 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     duration: 0,
   });
 
-  const play = useCallback((book: Book, chapter: Chapter) => {
+  const play = useCallback((book: PlayerBook, chapter: PlayerChapter) => {
     setState((prev) => ({ ...prev, book, chapter, isPlaying: true, currentTime: 0 }));
     if (audioRef.current) {
-      audioRef.current.src = chapter.audioUrl ?? '';
-      if (chapter.audioUrl) audioRef.current.play().catch(() => {});
+      audioRef.current.src = chapter.audio_url ?? '';
+      if (chapter.audio_url) audioRef.current.play().catch(() => {});
     }
   }, []);
 

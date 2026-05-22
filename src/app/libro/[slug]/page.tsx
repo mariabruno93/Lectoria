@@ -1,11 +1,9 @@
-import { getBookBySlug, books } from '@/lib/books';
+import { createClient } from '@/lib/supabase/server';
 import { notFound } from 'next/navigation';
 import LibroClient from './LibroClient';
 import type { Metadata } from 'next';
 
-export async function generateStaticParams() {
-  return books.map((b) => ({ slug: b.slug }));
-}
+export const dynamic = 'force-dynamic';
 
 export async function generateMetadata({
   params,
@@ -13,11 +11,16 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const book = getBookBySlug(slug);
-  if (!book) return {};
+  const supabase = await createClient();
+  const { data: work } = await supabase
+    .from('works')
+    .select('title, description')
+    .eq('slug', slug)
+    .single();
+  if (!work) return {};
   return {
-    title: `${book.title} — Lectoria`,
-    description: book.description,
+    title: `${work.title} — Lectoria`,
+    description: work.description ?? undefined,
   };
 }
 
@@ -27,7 +30,15 @@ export default async function LibroPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const book = getBookBySlug(slug);
-  if (!book) notFound();
-  return <LibroClient book={book} />;
+  const supabase = await createClient();
+
+  const { data: work } = await supabase
+    .from('works')
+    .select('*, authors(name, slug, nationality, born_year, died_year), chapters(*)')
+    .eq('slug', slug)
+    .single();
+
+  if (!work) notFound();
+
+  return <LibroClient work={work} />;
 }

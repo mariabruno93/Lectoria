@@ -2,9 +2,8 @@
 
 import { useState, useMemo } from 'react';
 import BookCard from '@/components/BookCard';
-import { Book, searchBooks } from '@/lib/books';
 
-export default function BibliotecaClient({ allBooks }: { allBooks: Book[] }) {
+export default function BibliotecaClient({ allBooks }: { allBooks: any[] }) {
   const [query, setQuery] = useState('');
 
   const results = useMemo(() => {
@@ -12,8 +11,10 @@ export default function BibliotecaClient({ allBooks }: { allBooks: Book[] }) {
     if (!q) return allBooks;
     return allBooks.filter((b) => {
       const inTitle = b.title.toLowerCase().includes(q);
-      const inAlt = b.altTitles?.some((t) => t.toLowerCase().includes(q));
-      const inAuthor = b.author.toLowerCase().includes(q);
+      const altTitles: string[] = b.alt_titles ?? b.altTitles ?? [];
+      const inAlt = altTitles.some((t) => t.toLowerCase().includes(q));
+      const authorName: string = b.authors?.name ?? (typeof b.author === 'string' ? b.author : '');
+      const inAuthor = authorName.toLowerCase().includes(q);
       return inTitle || inAlt || inAuthor;
     });
   }, [query, allBooks]);
