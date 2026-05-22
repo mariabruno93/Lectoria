@@ -9,6 +9,7 @@ const NAV = [
   { href: '/admin/autores', label: 'Autores', icon: '👤' },
   { href: '/admin/obras', label: 'Obras', icon: '📚' },
   { href: '/admin/audios', label: 'Audios', icon: '🎵' },
+  { href: '/admin/usuarios', label: 'Usuarios', icon: '👥' },
 ];
 
 export default function AdminSidebar() {
