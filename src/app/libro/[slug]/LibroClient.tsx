@@ -130,12 +130,20 @@ export default function LibroClient({ work }: { work: any }) {
         {/* Cover + main play */}
         <div className="flex flex-col gap-5">
           <div
-            className={`${isStory ? 'aspect-square' : 'aspect-[2/3]'} rounded-2xl`}
+            className={`${isStory ? 'aspect-square' : 'aspect-[2/3]'} rounded-2xl relative overflow-hidden`}
             style={{
               background: `linear-gradient(160deg, ${work.cover_gradient_from} 0%, ${work.cover_gradient_to} 100%)`,
               boxShadow: '0 8px 40px rgba(0,0,0,0.6)',
             }}
-          />
+          >
+            {work.cover_url && (
+              <img
+                src={work.cover_url}
+                alt={work.title}
+                className="absolute inset-0 w-full h-full object-cover"
+              />
+            )}
+          </div>
           {chapters.length > 0 && (
             <button
               onClick={() => play(work, chapters[0])}
