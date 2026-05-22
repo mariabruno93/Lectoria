@@ -21,7 +21,7 @@ export default async function Home() {
     <div>
       {/* Hero */}
       <section
-        className="relative overflow-hidden px-6 py-24 md:py-36 flex flex-col items-center text-center"
+        className="relative overflow-hidden px-6 pt-10 pb-20 md:pt-14 md:pb-28 flex flex-col items-center text-center"
         style={{
           background: 'radial-gradient(ellipse 80% 60% at 50% 0%, #2A1A08 0%, #0D0C0B 70%)',
         }}
