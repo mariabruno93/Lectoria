@@ -1,8 +1,47 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Book, Chapter } from '@/lib/books';
 import { usePlayer } from '@/context/PlayerContext';
+
+const LANG_LABELS: Record<string, string> = { es: 'Español', en: 'English' };
+const LANG_FLAGS: Record<string, string> = { es: '🇪🇸', en: '🇬🇧' };
+
+function LanguageSelector({ book }: { book: Book }) {
+  const router = useRouter();
+  if (!book.translations || Object.keys(book.translations).length === 0) return null;
+
+  // Available langs = current + translations
+  const available: { lang: string; slug: string }[] = [
+    { lang: book.language, slug: book.slug },
+    ...Object.entries(book.translations).map(([lang, slug]) => ({ lang, slug: slug! })),
+  ].sort((a, b) => a.lang.localeCompare(b.lang));
+
+  return (
+    <div className="flex items-center gap-2 mb-5">
+      <span className="text-xs" style={{ color: '#8A8478' }}>Disponible en:</span>
+      {available.map(({ lang, slug }) => {
+        const isCurrent = lang === book.language;
+        return (
+          <button
+            key={lang}
+            onClick={() => !isCurrent && router.push(`/libro/${slug}`)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-opacity"
+            style={
+              isCurrent
+                ? { background: '#C9933A', color: '#fff', cursor: 'default' }
+                : { background: '#2A2720', color: '#8A8478', cursor: 'pointer' }
+            }
+          >
+            <span>{LANG_FLAGS[lang]}</span>
+            <span>{LANG_LABELS[lang] ?? lang.toUpperCase()}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
 
 function ChapterRow({ book, chapter }: { book: Book; chapter: Chapter }) {
   const { play, togglePlay, book: activeBook, chapter: activeChapter, isPlaying } = usePlayer();
@@ -120,6 +159,7 @@ export default function LibroClient({ book }: { book: Book }) {
         {/* Details + chapters */}
         <div>
           <div className="mb-8">
+            <LanguageSelector book={book} />
             <div className="flex items-center gap-2 mb-3">
               <span
                 className="text-xs px-2 py-0.5 rounded-full font-medium tracking-widest"
