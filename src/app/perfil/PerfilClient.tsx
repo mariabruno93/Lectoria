@@ -30,6 +30,8 @@ export default function PerfilClient({ user, profile }: { user: any; profile: an
       setAvatarUrl(data.url);
       await supabase.from('profiles').update({ avatar_url: data.url }).eq('id', user.id);
       setMsg('Foto actualizada');
+    } else {
+      setMsg('Error al subir foto: ' + (data.error ?? 'sin respuesta'));
     }
     setUploading(false);
   }
