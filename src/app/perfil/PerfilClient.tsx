@@ -19,13 +19,18 @@ export default function PerfilClient({ user, profile }: { user: any; profile: an
     const file = e.target.files?.[0];
     if (!file) return;
     setUploading(true);
+    e.target.value = '';
     const form = new FormData();
     form.append('file', file);
     form.append('bucket', 'covers');
     form.append('path', `avatars/${user.id}.${file.name.split('.').pop()}`);
     const res = await fetch('/api/admin/upload', { method: 'POST', body: form });
     const data = await res.json();
-    if (data.url) setAvatarUrl(data.url);
+    if (data.url) {
+      setAvatarUrl(data.url);
+      await supabase.from('profiles').update({ avatar_url: data.url }).eq('id', user.id);
+      setMsg('Foto actualizada');
+    }
     setUploading(false);
   }
 
