@@ -8,7 +8,6 @@ const NAV = [
   { href: '/admin', label: 'Dashboard', icon: '◈' },
   { href: '/admin/autores', label: 'Autores', icon: '👤' },
   { href: '/admin/obras', label: 'Obras', icon: '📚' },
-  { href: '/admin/audios', label: 'Audios', icon: '🎵' },
   { href: '/admin/usuarios', label: 'Usuarios', icon: '👥' },
 ];
 
