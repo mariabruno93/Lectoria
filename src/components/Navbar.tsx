@@ -6,11 +6,11 @@ export default async function Navbar() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  let profile: { display_name: string | null; avatar_url: string | null } | null = null;
+  let profile: { display_name: string | null; avatar_url: string | null; is_admin: boolean } | null = null;
   if (user) {
     const { data } = await supabase
       .from('profiles')
-      .select('display_name, avatar_url')
+      .select('display_name, avatar_url, is_admin')
       .eq('id', user.id)
       .single();
     profile = data;
@@ -37,6 +37,7 @@ export default async function Navbar() {
               email={user.email!}
               displayName={profile?.display_name ?? null}
               avatarUrl={profile?.avatar_url ?? null}
+              isAdmin={profile?.is_admin ?? false}
             />
           ) : (
             <Link href="/login"

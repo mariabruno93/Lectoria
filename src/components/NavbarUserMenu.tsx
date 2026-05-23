@@ -9,9 +9,10 @@ interface Props {
   email: string;
   displayName: string | null;
   avatarUrl: string | null;
+  isAdmin?: boolean;
 }
 
-export default function NavbarUserMenu({ email, displayName, avatarUrl }: Props) {
+export default function NavbarUserMenu({ email, displayName, avatarUrl, isAdmin = false }: Props) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const router = useRouter();
@@ -62,6 +63,13 @@ export default function NavbarUserMenu({ email, displayName, avatarUrl }: Props)
             </p>
             <p className="text-xs truncate" style={{ color: '#8A8478' }}>{email}</p>
           </div>
+          {isAdmin && (
+            <Link href="/admin" onClick={() => setOpen(false)}
+              className="flex items-center gap-2 px-4 py-2 text-sm transition-colors hover:opacity-80"
+              style={{ color: '#C9933A', fontWeight: 600 }}>
+              ◈ Panel admin
+            </Link>
+          )}
           <Link href="/perfil" onClick={() => setOpen(false)}
             className="flex items-center gap-2 px-4 py-2 text-sm transition-colors hover:opacity-80"
             style={{ color: '#F2EDE4' }}>
