@@ -2,9 +2,15 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/server';
 import { MsEdgeTTS, OUTPUT_FORMAT } from 'msedge-tts';
 
+// Voces oficiales de Lectoria
+// ES general: Jorge (México) — elegida por sonido natural
+// ES argentino (futuro): Elena o Jorge — el escritor elige
+// EN: Jenny (USA) — elegida por claridad y calidez
 const VOICES: Record<string, string> = {
-  es: 'es-AR-TomasNeural',
-  en: 'en-US-GuyNeural',
+  es: 'es-MX-JorgeNeural',
+  en: 'en-US-JennyNeural',
+  'es-ar-elena': 'es-AR-ElenaNeural',
+  'es-ar-jorge': 'es-MX-JorgeNeural',
 };
 
 export async function POST(req: NextRequest) {
