@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-// @ts-ignore
-import PDFDocument from 'pdfkit';
 
 export const dynamic = 'force-dynamic';
 
@@ -35,7 +33,9 @@ export async function GET(
     return NextResponse.json({ error: 'No content available' }, { status: 404 });
   }
 
-  // Generar PDF en memoria
+  // Generar PDF en memoria (require dinámico para que Vercel no lo bundlee)
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const PDFDocument = require('pdfkit');
   const chunks: Buffer[] = [];
 
   await new Promise<void>((resolve, reject) => {
