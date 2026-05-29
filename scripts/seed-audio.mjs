@@ -23,19 +23,72 @@ const supabase = createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE
 
 /**
  * Limpia el texto de Gutenberg antes de enviarlo al TTS.
- * Gutenberg formatea líneas a ~72 chars, lo que produce saltos de línea
- * dentro de oraciones. El TTS los interpreta como pausas → audio entrecortado.
- * Solución: unir líneas dentro del mismo párrafo (1 \n → espacio).
- * Los párrafos reales (2+ \n) se conservan como pausa natural.
+ *
+ * Problemas que resuelve:
+ * 1. Saltos de línea cada 72 chars → audio entrecortado (une líneas del mismo párrafo)
+ * 2. _cursiva_ con guión bajo → TTS dice "underscore" (elimina marcadores)
+ * 3. [Illustration], [eBook #11] → TTS lee el tag (elimina corchetes editoriales)
+ * 4. * * * separadores ornamentales → TTS dice "asterisco" (elimina)
+ * 5. Asteriscos de énfasis **word** → elimina
  */
 function cleanForTTS(text) {
   return text
-    .replace(/\r\n/g, '\n')          // normalizar CRLF → LF
-    .replace(/\f/g, '\n')            // form feeds
-    .replace(/([^\n])\n([^\n])/g, '$1 $2')  // une líneas dentro del párrafo
-    .replace(/ {2,}/g, ' ')          // colapsa espacios múltiples
-    .replace(/\n{3,}/g, '\n\n')      // máximo 2 saltos consecutivos
+    .replace(/\r\n/g, '\n')                          // normalizar CRLF → LF
+    .replace(/\f/g, '\n')                            // form feeds
+    // ── Artefactos de formato Gutenberg ──
+    .replace(/_([^_\n]+)_/g, '$1')                  // _cursiva_ → cursiva
+    .replace(/_/g, '')                               // guiones bajos sueltos restantes
+    .replace(/\*\*([^*\n]+)\*\*/g, '$1')            // **negrita** → negrita
+    .replace(/^\s*\*[\s*]+\*\s*$/gm, '')            // * * * separadores ornamentales
+    .replace(/\[Illustration[^\]]*\]/gi, '')         // [Illustration: descripción]
+    .replace(/\[eBook[^\]]*\]/gi, '')               // [eBook #11]
+    .replace(/\[[^\]]{1,40}\]/g, '')                // otros tags cortos entre corchetes
+    // ── Formato de líneas ──
+    .replace(/([^\n])\n([^\n])/g, '$1 $2')          // une líneas dentro del párrafo
+    .replace(/ {2,}/g, ' ')                         // colapsa espacios múltiples
+    .replace(/\n{3,}/g, '\n\n')                     // máximo 2 saltos consecutivos
     .trim();
+}
+
+/**
+ * Corre antes de generar audio. Detecta artefactos que el TTS leería mal
+ * y muestra ejemplos para que se pueda verificar que cleanForTTS los resolvió.
+ * Retorna true si el texto está limpio, false si hay problemas no resueltos.
+ */
+function preflightCheck(rawText, slug) {
+  const checks = [
+    { name: 'guiones bajos (_cursiva_)',   pattern: /_[^_\n]{1,50}_/g },
+    { name: 'guiones bajos sueltos',       pattern: /(?<![a-zA-Z])_(?![a-zA-Z])/g },
+    { name: 'asteriscos ornamentales',     pattern: /^\s*\*[\s*]+\*/gm },
+    { name: 'tags entre corchetes [...]',  pattern: /\[[^\]]{2,40}\]/g },
+    { name: 'entidades HTML (&amp; etc.)', pattern: /&[a-z]{2,6};/g },
+    { name: 'caracteres de control',       pattern: /[\x00-\x08\x0B\x0C\x0E-\x1F]/g },
+  ];
+
+  // Correr checks sobre el texto ya limpio
+  const cleanedText = cleanForTTS(rawText);
+  let allOk = true;
+
+  console.log(`\n  🔍 Preflight check: ${slug}`);
+  for (const { name, pattern } of checks) {
+    const rawMatches   = [...rawText.matchAll(pattern)];
+    const cleanMatches = [...cleanedText.matchAll(pattern)];
+    if (rawMatches.length > 0) {
+      if (cleanMatches.length === 0) {
+        console.log(`     ✓ ${name}: ${rawMatches.length} encontrados → eliminados`);
+      } else {
+        console.log(`     ⚠ ${name}: ${cleanMatches.length} QUEDAN después de limpiar`);
+        cleanMatches.slice(0, 3).forEach(m =>
+          console.log(`       ejemplo: "${m[0].slice(0, 60)}"`)
+        );
+        allOk = false;
+      }
+    }
+  }
+  if (allOk) console.log(`     ✓ Texto limpio — sin artefactos\n`);
+  else console.log(`     ⚠ Revisar antes de subir\n`);
+
+  return allOk;
 }
 
 function chunkText(text, max = 4000) {
@@ -312,6 +365,9 @@ for (const work of WORKS) {
 
     const chapters = job.extract(rawText);
     if (!chapters.length) { console.log('  ✗ No se encontraron capítulos'); continue; }
+
+    // Preflight: verificar el primer capítulo en representación del lote
+    preflightCheck(chapters[0].text, `${work.slug} cap 1`);
 
     for (let i = 0; i < chapters.length; i++) {
       await uploadAndSave(work.slug, workId, i + 1, chapters[i].title, job.lang, job.voice, chapters[i].text);
