@@ -204,6 +204,37 @@ export default function LibroClient({ work }: { work: any }) {
               )}
             </button>
           )}
+
+          {/* Botón Leer — para cuentos: reader de texto; para libros: PDF */}
+          {isStory ? (
+            <Link
+              href={`/libro/${work.slug}/leer`}
+              className="w-full py-3 rounded-full font-semibold flex items-center justify-center gap-2 transition-opacity hover:opacity-80"
+              style={{ background: '#1A1816', color: '#C9933A', border: '1px solid #C9933A40', textDecoration: 'none' }}
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+              </svg>
+              Leer cuento
+            </Link>
+          ) : (
+            <a
+              href={`/api/libro/${work.slug}/pdf`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full py-3 rounded-full font-semibold flex items-center justify-center gap-2 transition-opacity hover:opacity-80"
+              style={{ background: '#1A1816', color: '#C9933A', border: '1px solid #C9933A40', textDecoration: 'none' }}
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                <polyline points="14 2 14 8 20 8" />
+                <line x1="12" y1="18" x2="12" y2="12" />
+                <line x1="9" y1="15" x2="15" y2="15" />
+              </svg>
+              Leer / Descargar PDF
+            </a>
+          )}
         </div>
 
         {/* Info + capítulos */}
