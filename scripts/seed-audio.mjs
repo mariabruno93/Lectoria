@@ -104,28 +104,85 @@ function chunkText(text, max = 4000) {
   return chunks;
 }
 
-async function generateAudio(text, voice) {
-  const tts = new MsEdgeTTS();
-  await tts.setMetadata(voice, OUTPUT_FORMAT.AUDIO_24KHZ_96KBITRATE_MONO_MP3);
-  const all = [];
-  for (const chunk of chunkText(text)) {
+/**
+ * Genera audio Y captura los tiempos reales de inicio de cada párrafo
+ * usando el metadataStream de msedge-tts (eventos WordBoundary).
+ *
+ * Retorna { audio: Buffer, timings: number[] }
+ * donde timings[i] = segundo exacto en que el TTS empieza a leer el párrafo i.
+ */
+async function generateAudioWithTimings(text, voice) {
+  const cleanedText = cleanForTTS(text);
+  const chunks = chunkText(text); // ya están limpios (chunkText llama cleanForTTS)
+
+  // Construir mapa global: índice de palabra → índice de párrafo
+  const paragraphs = cleanedText.split('\n\n').map(p => p.trim()).filter(p => p.length > 20);
+  const wordParaMap = [];
+  for (let pi = 0; pi < paragraphs.length; pi++) {
+    const wordCount = paragraphs[pi].split(/\s+/).filter(w => w).length;
+    for (let wi = 0; wi < wordCount; wi++) wordParaMap.push(pi);
+  }
+
+  const paraTimingsMs = new Array(paragraphs.length).fill(-1);
+  let globalWordIdx = 0;
+  let chunkStartMs = 0;
+  const allBuffers = [];
+
+  for (const chunk of chunks) {
+    const tts = new MsEdgeTTS();
+    await tts.setMetadata(voice, OUTPUT_FORMAT.AUDIO_24KHZ_96KBITRATE_MONO_MP3);
     const bufs = [];
+    let chunkEndMs = 0;
+
     await new Promise((res, rej) => {
-      const { audioStream } = tts.toStream(chunk);
+      const { audioStream, metadataStream } = tts.toStream(chunk);
       audioStream.on('data', d => bufs.push(d));
       audioStream.on('end', res);
       audioStream.on('error', rej);
+
+      metadataStream?.on('data', event => {
+        if (event.type !== 'WordBoundary') return;
+        const offsetMs  = (event.offset  ?? 0) / 10000;   // 100ns → ms
+        const durMs     = (event.duration ?? 0) / 10000;
+        const absoluteMs = chunkStartMs + offsetMs;
+        chunkEndMs = Math.max(chunkEndMs, offsetMs + durMs);
+
+        // Registrar el primer tiempo de cada párrafo
+        if (globalWordIdx < wordParaMap.length) {
+          const pi = wordParaMap[globalWordIdx];
+          if (paraTimingsMs[pi] < 0) paraTimingsMs[pi] = absoluteMs;
+        }
+        globalWordIdx++;
+      });
     });
-    all.push(...bufs);
+
+    const buf = Buffer.concat(bufs);
+    allBuffers.push(buf);
+    // Si no hubo eventos (metadataStream no disponible), estimar por tamaño de buffer
+    chunkStartMs += chunkEndMs > 0 ? chunkEndMs : buf.length / 12;
   }
-  return Buffer.concat(all);
+
+  // Asegurar que el párrafo 0 empiece en 0
+  if (paraTimingsMs[0] < 0) paraTimingsMs[0] = 0;
+  // Rellenar huecos hacia adelante
+  let last = 0;
+  for (let i = 0; i < paraTimingsMs.length; i++) {
+    if (paraTimingsMs[i] >= 0) last = paraTimingsMs[i];
+    else paraTimingsMs[i] = last;
+  }
+
+  return {
+    audio: Buffer.concat(allBuffers),
+    timings: paraTimingsMs.map(ms => Math.round(ms) / 1000), // ms → segundos
+  };
 }
 
 async function uploadAndSave(workSlug, workId, chapterNum, title, lang, voice, text) {
   process.stdout.write(`    Cap ${chapterNum}: ${title.slice(0, 50)}... `);
   try {
-    const cleanText = cleanForTTS(text);   // texto limpio para guardar en DB
-    const audio = await generateAudio(text, voice);
+    const cleanText = cleanForTTS(text);
+    const { audio, timings } = await generateAudioWithTimings(text, voice);
+    if (audio.length === 0) throw new Error('audio vacío');
     const path = `${workSlug}/${lang}/${chapterNum}.mp3`;
     const { error: upErr } = await supabase.storage
       .from('audio').upload(path, audio, { contentType: 'audio/mpeg', upsert: true });
@@ -134,9 +191,10 @@ async function uploadAndSave(workSlug, workId, chapterNum, title, lang, voice, t
     await supabase.from('chapters').upsert({
       work_id: workId, chapter_number: chapterNum,
       title, lang, audio_url: data.publicUrl,
-      content: cleanText,   // texto para read-along
+      content: cleanText,
+      paragraph_timings: timings,
     }, { onConflict: 'work_id,chapter_number,lang' });
-    console.log('✓');
+    console.log(`✓ (${timings.length} párrafos timed)`);
   } catch (e) { console.log('✗', e.message); }
 }
 

@@ -8,42 +8,47 @@ import { usePlayer } from '@/context/PlayerContext';
 
 function ReadAlongPanel({
   content,
+  timings,
   currentTime,
   duration,
 }: {
   content: string;
+  timings?: number[] | null;
   currentTime: number;
   duration: number;
 }) {
   const activeRef = useRef<HTMLParagraphElement>(null);
 
-  // Dividir en párrafos (texto ya limpiado por cleanForTTS, sin saltos dentro de oraciones)
   const paragraphs = content.split('\n\n').map(p => p.trim()).filter(p => p.length > 20);
 
-  // Estimación de tiempo por párrafo basada en lo que el TTS realmente mide:
-  //   - palabras (velocidad base ~150 WPM)
-  //   - pausas de puntuación: . ! ? ; → ~0.5s cada una
-  //   - pausas menores: , — : → ~0.25s cada una
-  //   - overhead de arranque por párrafo: ~0.4s
-  // Esto reduce el drift en textos con mezcla de párrafos largos y diálogos cortos.
-  function paraWeight(p: string): number {
-    const words = p.split(/\s+/).length;
-    const hardBreaks = (p.match(/[.!?;]/g) ?? []).length;
-    const softBreaks = (p.match(/[,—–:]/g) ?? []).length;
-    return words * 6 + hardBreaks * 8 + softBreaks * 3 + 60;
-  }
-  const weights = paragraphs.map(paraWeight);
-  const totalWeight = weights.reduce((sum, w) => sum + w, 0);
-  const progress = duration > 0 ? currentTime / duration : 0;
-
-  let accumulated = 0;
+  // Sincronización: si hay tiempos reales del TTS, usarlos directamente.
+  // Si no (capítulos generados antes del metadataStream), caer en estimación heurística.
   let activeIndex = 0;
-  for (let i = 0; i < paragraphs.length; i++) {
-    const start = accumulated / totalWeight;
-    accumulated += weights[i];
-    const end = accumulated / totalWeight;
-    if (progress >= start && progress < end) { activeIndex = i; break; }
-    if (progress >= end) activeIndex = i;
+
+  if (timings && timings.length === paragraphs.length) {
+    // ── Modo exacto: tiempos reales capturados durante la generación ──
+    for (let i = timings.length - 1; i >= 0; i--) {
+      if (currentTime >= timings[i]) { activeIndex = i; break; }
+    }
+  } else {
+    // ── Modo estimado: fallback heurístico (palabras + puntuación) ──
+    function paraWeight(p: string): number {
+      const words = p.split(/\s+/).length;
+      const hardBreaks = (p.match(/[.!?;]/g) ?? []).length;
+      const softBreaks = (p.match(/[,—–:]/g) ?? []).length;
+      return words * 6 + hardBreaks * 8 + softBreaks * 3 + 60;
+    }
+    const weights = paragraphs.map(paraWeight);
+    const totalWeight = weights.reduce((sum, w) => sum + w, 0);
+    const progress = duration > 0 ? currentTime / duration : 0;
+    let accumulated = 0;
+    for (let i = 0; i < paragraphs.length; i++) {
+      const start = accumulated / totalWeight;
+      accumulated += weights[i];
+      const end = accumulated / totalWeight;
+      if (progress >= start && progress < end) { activeIndex = i; break; }
+      if (progress >= end) activeIndex = i;
+    }
   }
 
   // Auto-scroll al párrafo activo
@@ -290,6 +295,7 @@ export default function LibroClient({ work }: { work: any }) {
           {playingChapter?.content && (
             <ReadAlongPanel
               content={playingChapter.content}
+              timings={playingChapter.paragraph_timings ?? null}
               currentTime={currentTime}
               duration={duration}
             />
