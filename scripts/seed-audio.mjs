@@ -157,6 +157,57 @@ const WORKS = [
       },
     ]
   },
+  {
+    slug: 'a-la-deriva',
+    jobs: [
+      { lang: 'es', voice: 'es-MX-JorgeNeural', source: 'gutenberg',
+        url: 'https://www.gutenberg.org/cache/epub/13507/pg13507.txt',
+        extract: (txt) => {
+          const startMatch = txt.match(/#A LA DERIVA#/i);
+          if (!startMatch) return [];
+          const start = startMatch.index + startMatch[0].length;
+          const endMatch = txt.slice(start).match(/#[A-Z]/);
+          const end = endMatch ? start + endMatch.index : start + 50000;
+          const body = txt.slice(start, end).trim();
+          return body.length > 200 ? [{ title: 'A la deriva', text: body }] : [];
+        }
+      },
+    ]
+  },
+  {
+    slug: 'la-insolacion',
+    jobs: [
+      { lang: 'es', voice: 'es-MX-JorgeNeural', source: 'gutenberg',
+        url: 'https://www.gutenberg.org/cache/epub/13507/pg13507.txt',
+        extract: (txt) => {
+          const startMatch = txt.match(/#LA INSOLACION#/i);
+          if (!startMatch) return [];
+          const start = startMatch.index + startMatch[0].length;
+          const endMatch = txt.slice(start).match(/#[A-Z]/);
+          const end = endMatch ? start + endMatch.index : start + 100000;
+          const body = txt.slice(start, end).trim();
+          return body.length > 200 ? [{ title: 'La insolación', text: body }] : [];
+        }
+      },
+    ]
+  },
+  {
+    slug: 'la-meningitis-y-su-sombra',
+    jobs: [
+      { lang: 'es', voice: 'es-AR-ElenaNeural', source: 'gutenberg',
+        url: 'https://www.gutenberg.org/cache/epub/13507/pg13507.txt',
+        extract: (txt) => {
+          const startMatch = txt.match(/#LA MENINGITIS Y SU SOMBRA#/i);
+          if (!startMatch) return [];
+          const start = startMatch.index + startMatch[0].length;
+          const endMatch = txt.slice(start).match(/#[A-Z]/);
+          const end = endMatch ? start + endMatch.index : start + 100000;
+          const body = txt.slice(start, end).trim();
+          return body.length > 200 ? [{ title: 'La meningitis y su sombra', text: body }] : [];
+        }
+      },
+    ]
+  },
   // ── NOVELAS EN INGLÉS (Project Gutenberg, primeros 5 capítulos) ────────
   {
     slug: 'alice-in-wonderland',

@@ -20,16 +20,20 @@ function ReadAlongPanel({
   // Dividir en párrafos (texto ya limpiado por cleanForTTS, sin saltos dentro de oraciones)
   const paragraphs = content.split('\n\n').map(p => p.trim()).filter(p => p.length > 20);
 
-  // Calcular qué párrafo se está leyendo por ratio de caracteres
-  const totalChars = paragraphs.reduce((sum, p) => sum + p.length, 0);
+  // Calcular qué párrafo se está leyendo.
+  // Peso = chars reales + mínimo 120 chars por párrafo (overhead de pausa + arranque del TTS).
+  // Sin el mínimo, los diálogos cortos reciben casi cero tiempo y el resaltado queda rezagado.
+  const MIN_PARA_WEIGHT = 120;
+  const weights = paragraphs.map(p => p.length + MIN_PARA_WEIGHT);
+  const totalWeight = weights.reduce((sum, w) => sum + w, 0);
   const progress = duration > 0 ? currentTime / duration : 0;
 
   let accumulated = 0;
   let activeIndex = 0;
   for (let i = 0; i < paragraphs.length; i++) {
-    const start = accumulated / totalChars;
-    accumulated += paragraphs[i].length;
-    const end = accumulated / totalChars;
+    const start = accumulated / totalWeight;
+    accumulated += weights[i];
+    const end = accumulated / totalWeight;
     if (progress >= start && progress < end) { activeIndex = i; break; }
     if (progress >= end) activeIndex = i;
   }
