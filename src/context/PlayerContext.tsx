@@ -22,6 +22,7 @@ export interface PlayerChapter {
   title: string;
   audio_url: string | null;
   duration_label: string | null;
+  content?: string | null;   // texto del capítulo para read-along
 }
 
 interface PlayerState {

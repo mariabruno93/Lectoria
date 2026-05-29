@@ -1,8 +1,87 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePlayer } from '@/context/PlayerContext';
+
+// ── Read-Along Panel ───────────────────────────────────────────────────────
+
+function ReadAlongPanel({
+  content,
+  currentTime,
+  duration,
+}: {
+  content: string;
+  currentTime: number;
+  duration: number;
+}) {
+  const activeRef = useRef<HTMLParagraphElement>(null);
+
+  // Dividir en párrafos (texto ya limpiado por cleanForTTS, sin saltos dentro de oraciones)
+  const paragraphs = content.split('\n\n').map(p => p.trim()).filter(p => p.length > 20);
+
+  // Calcular qué párrafo se está leyendo por ratio de caracteres
+  const totalChars = paragraphs.reduce((sum, p) => sum + p.length, 0);
+  const progress = duration > 0 ? currentTime / duration : 0;
+
+  let accumulated = 0;
+  let activeIndex = 0;
+  for (let i = 0; i < paragraphs.length; i++) {
+    const start = accumulated / totalChars;
+    accumulated += paragraphs[i].length;
+    const end = accumulated / totalChars;
+    if (progress >= start && progress < end) { activeIndex = i; break; }
+    if (progress >= end) activeIndex = i;
+  }
+
+  // Auto-scroll al párrafo activo
+  useEffect(() => {
+    activeRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, [activeIndex]);
+
+  return (
+    <div className="mt-10">
+      <div
+        className="flex items-center gap-2 mb-4 pb-3"
+        style={{ borderBottom: '1px solid #2A2720' }}
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C9933A" strokeWidth="2">
+          <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+          <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+        </svg>
+        <h3 className="text-sm font-semibold tracking-wide" style={{ color: '#8A8478' }}>
+          Leyendo junto al audio
+        </h3>
+      </div>
+
+      <div
+        className="max-h-[420px] overflow-y-auto pr-3 space-y-3"
+        style={{ scrollbarWidth: 'thin', scrollbarColor: '#2A2720 transparent' }}
+      >
+        {paragraphs.map((para, i) => {
+          const isActive = i === activeIndex;
+          const isPast = i < activeIndex;
+          return (
+            <p
+              key={i}
+              ref={isActive ? activeRef : undefined}
+              className="text-sm leading-relaxed rounded-lg px-3 py-2 transition-all duration-700"
+              style={{
+                color: isActive ? '#F2EDE4' : isPast ? '#3A3630' : '#6A6460',
+                background: isActive ? '#2A2010' : 'transparent',
+                borderLeft: isActive ? '2px solid #C9933A' : '2px solid transparent',
+              }}
+            >
+              {para}
+            </p>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ── Chapter Row ────────────────────────────────────────────────────────────
 
 function ChapterRow({ work, chapter }: { work: any; chapter: any }) {
   const { play, togglePlay, book: activeBook, chapter: activeChapter, isPlaying } = usePlayer();
@@ -44,8 +123,10 @@ function ChapterRow({ work, chapter }: { work: any; chapter: any }) {
   );
 }
 
+// ── Main LibroClient ───────────────────────────────────────────────────────
+
 export default function LibroClient({ work }: { work: any }) {
-  const { play, book: activeBook, isPlaying } = usePlayer();
+  const { play, book: activeBook, chapter: activeChapter, isPlaying, currentTime, duration } = usePlayer();
   const isThisBookActive = activeBook?.slug === work.slug;
   const isStory = work.type === 'story';
   const authorName: string = work.authors?.name ?? '';
@@ -54,13 +135,17 @@ export default function LibroClient({ work }: { work: any }) {
     (a: any, b: any) => a.chapter_number - b.chapter_number
   );
 
-  // Detectar idiomas disponibles en los capítulos
   const availableLangs = [...new Set(allChapters.map((c: any) => c.lang ?? 'es'))];
   const hasMultipleLangs = availableLangs.length > 1;
   const defaultLang = availableLangs.includes('es') ? 'es' : availableLangs[0] ?? 'es';
   const [selectedLang, setSelectedLang] = useState<string>(defaultLang);
 
   const chapters = allChapters.filter((c: any) => (c.lang ?? 'es') === selectedLang);
+
+  // Capítulo activo de ESTE libro en el idioma seleccionado
+  const playingChapter = isThisBookActive && activeChapter
+    ? chapters.find((c: any) => c.id === activeChapter.id)
+    : null;
 
   const LANG_LABEL: Record<string, string> = { es: 'Español', en: 'English' };
   const LANG_FLAG: Record<string, string> = { es: '🇦🇷', en: '🇬🇧' };
@@ -187,6 +272,15 @@ export default function LibroClient({ work }: { work: any }) {
               style={{ background: '#1A1816', border: '1px solid #2A2720', color: '#8A8478' }}>
               🎙️ Audio en producción — próximamente
             </div>
+          )}
+
+          {/* Read-along panel: aparece cuando hay un capítulo activo con texto */}
+          {playingChapter?.content && (
+            <ReadAlongPanel
+              content={playingChapter.content}
+              currentTime={currentTime}
+              duration={duration}
+            />
           )}
         </div>
       </div>

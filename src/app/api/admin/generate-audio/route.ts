@@ -23,18 +23,49 @@ export async function POST(req: NextRequest) {
   const voice = VOICES[lang] ?? VOICES.es;
 
   // Generar audio con msedge-tts
+  // Limpia saltos de línea de 72 chars de Gutenberg (y PDFs con wrap duro)
+  // para evitar que el TTS genere pausas en medio de oraciones.
+  function cleanForTTS(raw: string): string {
+    return raw
+      .replace(/\r\n/g, '\n')
+      .replace(/\f/g, '\n')
+      .replace(/([^\n])\n([^\n])/g, '$1 $2')
+      .replace(/ {2,}/g, ' ')
+      .replace(/\n{3,}/g, '\n\n')
+      .trim();
+  }
+
+  const cleanText = cleanForTTS(text);
+
+  // Divide en chunks de 4000 chars (límite seguro de Edge TTS)
+  function chunkText(t: string, max = 4000): string[] {
+    const sentences = t.split(/(?<=[.!?»])\s+/);
+    const result: string[] = [];
+    let cur = '';
+    for (const s of sentences) {
+      if (cur.length + s.length > max && cur) { result.push(cur.trim()); cur = s; }
+      else cur += (cur ? ' ' : '') + s;
+    }
+    if (cur.trim()) result.push(cur.trim());
+    return result;
+  }
+
   const tts = new MsEdgeTTS();
   await tts.setMetadata(voice, OUTPUT_FORMAT.AUDIO_24KHZ_96KBITRATE_MONO_MP3);
 
-  const chunks: Buffer[] = [];
-  await new Promise<void>((resolve, reject) => {
-    const { audioStream } = tts.toStream(text);
-    audioStream.on('data', (chunk: Buffer) => chunks.push(chunk));
-    audioStream.on('end', resolve);
-    audioStream.on('error', reject);
-  });
+  const allBuffers: Buffer[] = [];
+  for (const chunk of chunkText(cleanText)) {
+    const chunks: Buffer[] = [];
+    await new Promise<void>((resolve, reject) => {
+      const { audioStream } = tts.toStream(chunk);
+      audioStream.on('data', (c: Buffer) => chunks.push(c));
+      audioStream.on('end', resolve);
+      audioStream.on('error', reject);
+    });
+    allBuffers.push(...chunks);
+  }
 
-  const audioBuffer = Buffer.concat(chunks);
+  const audioBuffer = Buffer.concat(allBuffers);
 
   // Subir a Supabase Storage
   const supabase = createAdminClient();
