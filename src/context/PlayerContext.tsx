@@ -11,10 +11,12 @@ import {
 
 // Campos mínimos que necesita el player (compatibles con el tipo Work de Supabase)
 export interface PlayerBook {
+  id?: string;           // work_id para tracking de biblioteca
   slug: string;
   title: string;
   cover_gradient_from: string;
   cover_gradient_to: string;
+  cover_url?: string | null;
 }
 
 export interface PlayerChapter {

@@ -3,8 +3,20 @@
 import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
+import BookCard from '@/components/BookCard';
 
-export default function PerfilClient({ user, profile }: { user: any; profile: any }) {
+type LibraryData = { following: any[]; playing: any[]; finished: any[] };
+type Tab = 'playing' | 'following' | 'finished';
+
+export default function PerfilClient({
+  user,
+  profile,
+  library,
+}: {
+  user: any;
+  profile: any;
+  library: LibraryData;
+}) {
   const router = useRouter();
   const supabase = createClient();
   const fileRef = useRef<HTMLInputElement>(null);
@@ -14,6 +26,7 @@ export default function PerfilClient({ user, profile }: { user: any; profile: an
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState('');
+  const [tab, setTab] = useState<Tab>('playing');
 
   async function handleAvatar(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -55,18 +68,28 @@ export default function PerfilClient({ user, profile }: { user: any; profile: an
     router.refresh();
   }
 
-  const INPUT = "w-full px-4 py-3 rounded-xl text-sm outline-none";
+  const INPUT = 'w-full px-4 py-3 rounded-xl text-sm outline-none';
   const INPUT_STYLE = { background: '#1A1816', border: '1px solid #2A2720', color: '#F2EDE4' };
 
+  const TABS: { id: Tab; label: string; count: number }[] = [
+    { id: 'playing',   label: '▶ En reproducción', count: library.playing.length },
+    { id: 'following', label: '＋ Seguidos',         count: library.following.length },
+    { id: 'finished',  label: '✓ Terminados',        count: library.finished.length },
+  ];
+
+  const tabWorks = tab === 'playing' ? library.playing
+    : tab === 'following' ? library.following
+    : library.finished;
+
   return (
-    <div className="max-w-lg mx-auto px-6 py-14">
+    <div className="max-w-2xl mx-auto px-6 py-14">
       <h1 className="text-3xl font-bold mb-10"
         style={{ fontFamily: 'Georgia, serif', color: '#F2EDE4' }}>
-        Mi perfil
+        Mi cuenta
       </h1>
 
+      {/* ── Perfil ──────────────────────────────────────────────────── */}
       <form onSubmit={handleSave} className="flex flex-col gap-6">
-        {/* Avatar */}
         <div className="flex items-center gap-5">
           <div className="relative w-20 h-20 flex-shrink-0">
             <div className="w-20 h-20 rounded-full overflow-hidden flex items-center justify-center text-2xl font-bold"
@@ -87,7 +110,6 @@ export default function PerfilClient({ user, profile }: { user: any; profile: an
           </div>
         </div>
 
-        {/* Nombre */}
         <div>
           <label className="block text-xs mb-1.5" style={{ color: '#8A8478' }}>Nombre</label>
           <input value={name} onChange={e => setName(e.target.value)}
@@ -96,7 +118,10 @@ export default function PerfilClient({ user, profile }: { user: any; profile: an
 
         {msg && (
           <p className="text-xs py-2 px-3 rounded-lg"
-            style={{ background: msg.includes('Error') ? '#2D0A0A' : '#0A2D0A', color: msg.includes('Error') ? '#ef4444' : '#22c55e' }}>
+            style={{
+              background: msg.includes('Error') ? '#2D0A0A' : '#0A2D0A',
+              color: msg.includes('Error') ? '#ef4444' : '#22c55e',
+            }}>
             {msg}
           </p>
         )}
@@ -108,6 +133,73 @@ export default function PerfilClient({ user, profile }: { user: any; profile: an
         </button>
       </form>
 
+      {/* ── Mis listas ──────────────────────────────────────────────── */}
+      <div className="mt-14">
+        <h2 className="text-xl font-semibold mb-6"
+          style={{ fontFamily: 'Georgia, serif', color: '#F2EDE4' }}>
+          Mis listas
+        </h2>
+
+        {/* Tabs */}
+        <div className="flex gap-2 mb-6 flex-wrap">
+          {TABS.map(t => (
+            <button
+              key={t.id}
+              onClick={() => setTab(t.id)}
+              className="px-4 py-2 rounded-full text-sm font-medium transition-all"
+              style={{
+                background: tab === t.id ? '#C9933A' : '#1A1816',
+                color: tab === t.id ? '#fff' : '#8A8478',
+                border: '1px solid',
+                borderColor: tab === t.id ? '#C9933A' : '#2A2720',
+              }}
+            >
+              {t.label}
+              {t.count > 0 && (
+                <span className="ml-1.5 text-xs opacity-70">({t.count})</span>
+              )}
+            </button>
+          ))}
+        </div>
+
+        {/* Grid de libros */}
+        {tabWorks.length === 0 ? (
+          <div className="py-16 text-center rounded-xl" style={{ background: '#1A1816', border: '1px solid #2A2720' }}>
+            <p className="text-sm" style={{ color: '#8A8478' }}>
+              {tab === 'playing'   ? 'No estás escuchando nada todavía. ¡Arrancá con un clásico!' :
+               tab === 'following' ? 'Aún no seguís ningún título. Tocá el ＋ en cualquier portada.' :
+               'No marcaste ningún título como terminado todavía.'}
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+            {tabWorks.map((work: any) => (
+              <div key={work.id ?? work.slug} className="relative">
+                <BookCard work={work} />
+                {/* Indicador de terminado */}
+                {tab === 'finished' && (
+                  <div className="absolute top-2 left-2 w-6 h-6 rounded-full flex items-center justify-center z-10"
+                    style={{ background: '#22c55e' }}>
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none"
+                      stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                  </div>
+                )}
+                {/* Indicador en reproducción */}
+                {tab === 'playing' && (
+                  <div className="absolute top-2 left-2 px-2 py-0.5 rounded-full text-xs font-medium z-10"
+                    style={{ background: 'rgba(201,147,58,0.85)', color: '#fff' }}>
+                    ▶
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* ── Logout ──────────────────────────────────────────────────── */}
       <div className="mt-10 pt-8" style={{ borderTop: '1px solid #2A2720' }}>
         <button onClick={handleLogout}
           className="w-full py-3 rounded-full text-sm font-medium transition-opacity hover:opacity-80"
