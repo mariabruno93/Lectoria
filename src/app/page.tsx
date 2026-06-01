@@ -110,13 +110,17 @@ export default async function Home() {
         style={{ background: 'radial-gradient(ellipse 80% 60% at 50% 0%, #2A1A08 0%, #0D0C0B 70%)' }}
       >
         <div className="max-w-2xl mx-auto">
-          <img src="/logo.png" alt="Epovox" width={72} height={72} className="mx-auto mb-6" style={{ objectFit: 'contain' }} />
           <p className="text-xs font-semibold uppercase tracking-widest mb-6" style={{ color: '#C9933A' }}>
             Audiolibros · Voz IA · Gratis
           </p>
           <h1 className="text-4xl md:text-6xl font-bold leading-tight mb-6"
             style={{ fontFamily: 'Georgia, serif', color: '#F2EDE4' }}>
-            Escuchá a los grandes.
+            <img
+              src="/logo.png"
+              alt="E"
+              className="inline-block align-middle"
+              style={{ width: '0.85em', height: '0.85em', objectFit: 'contain', mixBlendMode: 'screen', marginRight: '0.02em', marginTop: '-0.1em' }}
+            />scuchá a los grandes.
           </h1>
           <p className="text-lg md:text-xl mb-10" style={{ color: '#8A8478', lineHeight: 1.7 }}>
             Los clásicos de la literatura narrados con voz IA.
