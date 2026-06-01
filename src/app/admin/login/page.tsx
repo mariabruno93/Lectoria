@@ -31,9 +31,7 @@ export default function AdminLogin() {
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-2 mb-6">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-              <polygon points="6,3 20,12 6,21" fill="#C9933A" />
-            </svg>
+            <img src="/logo.png" alt="Epovox" width={36} height={36} style={{ objectFit: 'contain' }} />
             <span className="text-xl font-semibold" style={{ color: '#F2EDE4', fontFamily: 'Georgia, serif' }}>Epovox</span>
           </div>
           <h1 className="text-2xl font-bold mb-1" style={{ color: '#F2EDE4' }}>Panel de administración</h1>

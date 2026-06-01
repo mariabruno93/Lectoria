@@ -26,9 +26,7 @@ export default function AdminSidebar() {
     <aside className="w-56 flex flex-col py-6 px-4 border-r flex-shrink-0" style={{ background: '#111009', borderColor: '#2A2720' }}>
       {/* Logo */}
       <Link href="/" className="flex items-center gap-2 mb-8 px-2">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-          <polygon points="6,3 20,12 6,21" fill="#C9933A" />
-        </svg>
+        <img src="/logo.png" alt="Epovox" width={24} height={24} style={{ objectFit: 'contain' }} />
         <span className="font-semibold text-sm" style={{ color: '#F2EDE4', fontFamily: 'Georgia, serif' }}>Epovox</span>
       </Link>
 

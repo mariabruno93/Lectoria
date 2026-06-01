@@ -46,8 +46,9 @@ function LoginForm() {
     <div className="min-h-screen flex items-center justify-center px-4"
       style={{ background: '#0D0C0B' }}>
       <div className="w-full max-w-sm">
-        <Link href="/" className="flex items-center justify-center mb-8">
-          <span className="text-2xl font-bold" style={{ fontFamily: 'Georgia, serif', color: '#C9933A' }}>
+        <Link href="/" className="flex items-center justify-center gap-3 mb-8">
+          <img src="/logo.png" alt="Epovox" width={40} height={40} style={{ objectFit: 'contain' }} />
+          <span className="text-2xl font-bold" style={{ fontFamily: 'Georgia, serif', color: '#F2EDE4' }}>
             Epovox
           </span>
         </Link>
