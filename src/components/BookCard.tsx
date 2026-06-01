@@ -13,7 +13,7 @@ function getField(work: any) {
     from: work.cover_gradient_from ?? work.coverGradient?.from ?? '#1a1a2e',
     to: work.cover_gradient_to ?? work.coverGradient?.to ?? '#0d0d0d',
     duration: work.duration_label ?? work.duration ?? '',
-    author: work.author?.name ?? work.author ?? '',
+    author: work.authors?.name ?? work.author?.name ?? work.author ?? '',
     type: work.type ?? 'book',
   };
 }
