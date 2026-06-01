@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
+import Script from 'next/script';
 import './globals.css';
 import Navbar from '@/components/Navbar';
 import AudioPlayer from '@/components/AudioPlayer';
@@ -32,6 +33,14 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 
   return (
     <html lang="es" className={inter.variable}>
+      <head>
+        <Script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5365119447652587"
+          crossOrigin="anonymous"
+          strategy="afterInteractive"
+        />
+      </head>
       <body className="min-h-screen flex flex-col" style={{ background: 'var(--bg)', color: 'var(--text)' }}>
         <PlayerProvider>
           <Navbar />
