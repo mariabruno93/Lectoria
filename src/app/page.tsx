@@ -115,12 +115,7 @@ export default async function Home() {
           </p>
           <h1 className="text-4xl md:text-6xl font-bold leading-tight mb-6"
             style={{ fontFamily: 'Georgia, serif', color: '#F2EDE4' }}>
-            <img
-              src="/logo-transparent.png"
-              alt="E"
-              className="inline-block"
-              style={{ width: '1.1em', height: '1.1em', objectFit: 'contain', verticalAlign: 'middle', marginRight: '0.04em', marginTop: '-0.15em' }}
-            />scuchá a los grandes.
+            Escuchá a los grandes.
           </h1>
           <p className="text-lg md:text-xl mb-10" style={{ color: '#8A8478', lineHeight: 1.7 }}>
             Los clásicos de la literatura narrados con voz IA.
