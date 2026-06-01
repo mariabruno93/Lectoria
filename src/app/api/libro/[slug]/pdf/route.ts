@@ -4,10 +4,11 @@ import { createClient } from '@/lib/supabase/server';
 export const dynamic = 'force-dynamic';
 
 export async function GET(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ slug: string }> }
 ) {
   const { slug } = await params;
+  const langParam = req.nextUrl.searchParams.get('lang');
   const supabase = await createClient();
 
   // Traer obra + autores + capítulos con contenido
@@ -21,12 +22,13 @@ export async function GET(
     return NextResponse.json({ error: 'Not found' }, { status: 404 });
   }
 
-  // Filtrar el idioma principal (es → español primero, sino el primero disponible)
+  // Seleccionar idioma: ?lang=en|es, o español por defecto
   const allChapters = (work.chapters as any[]) ?? [];
   const langs = [...new Set(allChapters.map((c: any) => c.lang))];
   const mainLang = langs.includes('es') ? 'es' : langs[0] ?? 'es';
+  const selectedLang = langParam && langs.includes(langParam) ? langParam : mainLang;
   const chapters = allChapters
-    .filter((c: any) => c.lang === mainLang && c.content)
+    .filter((c: any) => c.lang === selectedLang && c.content)
     .sort((a: any, b: any) => a.chapter_number - b.chapter_number);
 
   if (!chapters.length) {
@@ -113,7 +115,7 @@ export async function GET(
   });
 
   const pdfBuffer = Buffer.concat(chunks);
-  const filename = `${slug}.pdf`;
+  const filename = `${slug}${selectedLang !== 'es' ? `-${selectedLang}` : ''}.pdf`;
 
   return new NextResponse(pdfBuffer, {
     headers: {

@@ -6,10 +6,13 @@ export const dynamic = 'force-dynamic';
 
 export default async function LeerPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ lang?: string }>;
 }) {
   const { slug } = await params;
+  const { lang: langParam } = await searchParams;
   const supabase = await createClient();
 
   const { data: work } = await supabase
@@ -23,12 +26,16 @@ export default async function LeerPage({
   const allChapters = (work.chapters as any[]) ?? [];
   const langs = [...new Set(allChapters.map((c: any) => c.lang))];
   const mainLang = langs.includes('es') ? 'es' : langs[0] ?? 'es';
+  const selectedLang = langParam && langs.includes(langParam) ? langParam : mainLang;
   const chapters = allChapters
-    .filter((c: any) => c.lang === mainLang && c.content)
+    .filter((c: any) => c.lang === selectedLang && c.content)
     .sort((a: any, b: any) => a.chapter_number - b.chapter_number);
 
   const isStory = work.type === 'story';
   const authorName: string = (work.authors as any)?.name ?? '';
+  const hasMultipleLangs = langs.length > 1;
+  const LANG_LABEL: Record<string, string> = { es: 'ES', en: 'EN' };
+  const LANG_FLAG: Record<string, string> = { es: '🇦🇷', en: '🇬🇧' };
 
   return (
     <div
@@ -93,10 +100,34 @@ export default async function LeerPage({
           </div>
         </div>
 
+        {/* Toggle ES/EN */}
+        {hasMultipleLangs && (
+          <div style={{ display: 'flex', gap: '4px', marginRight: '12px' }}>
+            {langs.sort().map(l => (
+              <a
+                key={l}
+                href={`/libro/${slug}/leer?lang=${l}`}
+                style={{
+                  padding: '5px 10px',
+                  borderRadius: '20px',
+                  fontSize: '12px',
+                  fontWeight: 600,
+                  textDecoration: 'none',
+                  background: selectedLang === l ? '#C9933A' : '#1A1816',
+                  color: selectedLang === l ? '#fff' : '#8A8478',
+                  border: selectedLang === l ? 'none' : '1px solid #2A2720',
+                }}
+              >
+                {LANG_FLAG[l]} {LANG_LABEL[l] ?? l.toUpperCase()}
+              </a>
+            ))}
+          </div>
+        )}
+
         {/* Botón PDF para libros */}
         {!isStory && (
           <a
-            href={`/api/libro/${slug}/pdf`}
+            href={`/api/libro/${slug}/pdf?lang=${selectedLang}`}
             target="_blank"
             rel="noopener noreferrer"
             style={{

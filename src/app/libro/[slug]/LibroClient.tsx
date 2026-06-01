@@ -25,7 +25,12 @@ function ReadAlongPanel({
   // Si no (capítulos generados antes del metadataStream), caer en estimación heurística.
   let activeIndex = 0;
 
-  if (timings && timings.length === paragraphs.length) {
+  // Los timings son "reales" solo si tienen variación (no todos cero)
+  const hasRealTimings = timings &&
+    timings.length === paragraphs.length &&
+    timings[timings.length - 1] > 1;
+
+  if (hasRealTimings) {
     // ── Modo exacto: tiempos reales capturados durante la generación ──
     for (let i = timings.length - 1; i >= 0; i--) {
       if (currentTime >= timings[i]) { activeIndex = i; break; }
@@ -208,7 +213,7 @@ export default function LibroClient({ work }: { work: any }) {
           {/* Botón Leer — para cuentos: reader de texto; para libros: PDF */}
           {isStory ? (
             <Link
-              href={`/libro/${work.slug}/leer`}
+              href={`/libro/${work.slug}/leer${selectedLang !== (availableLangs.includes('es') ? 'es' : availableLangs[0]) ? `?lang=${selectedLang}` : ''}`}
               className="w-full py-3 rounded-full font-semibold flex items-center justify-center gap-2 transition-opacity hover:opacity-80"
               style={{ background: '#1A1816', color: '#C9933A', border: '1px solid #C9933A40', textDecoration: 'none' }}
             >
@@ -216,11 +221,11 @@ export default function LibroClient({ work }: { work: any }) {
                 <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
                 <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
               </svg>
-              Leer cuento
+              {selectedLang === 'en' ? 'Read story' : 'Leer cuento'}
             </Link>
           ) : (
             <a
-              href={`/api/libro/${work.slug}/pdf`}
+              href={`/api/libro/${work.slug}/pdf?lang=${selectedLang}`}
               target="_blank"
               rel="noopener noreferrer"
               className="w-full py-3 rounded-full font-semibold flex items-center justify-center gap-2 transition-opacity hover:opacity-80"
@@ -232,7 +237,7 @@ export default function LibroClient({ work }: { work: any }) {
                 <line x1="12" y1="18" x2="12" y2="12" />
                 <line x1="9" y1="15" x2="15" y2="15" />
               </svg>
-              Leer / Descargar PDF
+              {selectedLang === 'en' ? 'Read / Download PDF' : 'Leer / Descargar PDF'}
             </a>
           )}
         </div>
