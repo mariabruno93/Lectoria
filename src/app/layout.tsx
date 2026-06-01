@@ -13,6 +13,10 @@ export const metadata: Metadata = {
   title: 'Epovox — Audiolibros clásicos',
   description:
     'Los grandes clásicos de la literatura narrados en audio. En español e inglés. Completamente gratis.',
+  icons: {
+    icon: '/logo.png',
+    apple: '/logo.png',
+  },
   openGraph: {
     title: 'Epovox — Audiolibros clásicos',
     description: 'Clásicos de la literatura en audio. Gratis.',
