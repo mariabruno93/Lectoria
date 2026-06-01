@@ -19,7 +19,7 @@ export async function generateMetadata({
     .single();
   if (!work) return {};
   return {
-    title: `${work.title} — Lectoria`,
+    title: `${work.title} — Epovox`,
     description: work.description ?? undefined,
   };
 }

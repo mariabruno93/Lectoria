@@ -24,7 +24,7 @@ export default async function Navbar() {
             <polygon points="6,3 20,12 6,21" fill="#C9933A" />
           </svg>
           <span className="text-xl font-semibold" style={{ color: '#F2EDE4', fontFamily: 'Georgia, serif', letterSpacing: '-0.01em' }}>
-            Lectoria
+            Epovox
           </span>
         </Link>
 

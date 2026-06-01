@@ -8,7 +8,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const supabase = await createClient();
   const { data: author } = await supabase.from('authors').select('*').eq('slug', slug).single();
   if (!author) return {};
-  return { title: `${author.name} — Lectoria`, description: author.bio ?? undefined };
+  return { title: `${author.name} — Epovox`, description: author.bio ?? undefined };
 }
 
 export default async function AutorPage({ params }: { params: Promise<{ slug: string }> }) {

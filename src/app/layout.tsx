@@ -10,13 +10,13 @@ import LibraryTracker from '@/components/LibraryTracker';
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
 export const metadata: Metadata = {
-  title: 'Lectoria — Audiolibros con voz IA',
+  title: 'Epovox — Audiolibros clásicos',
   description:
-    'Los grandes clásicos de la literatura narrados con voz IA. En español e inglés. Completamente gratis.',
+    'Los grandes clásicos de la literatura narrados en audio. En español e inglés. Completamente gratis.',
   openGraph: {
-    title: 'Lectoria — Audiolibros con voz IA',
+    title: 'Epovox — Audiolibros clásicos',
     description: 'Clásicos de la literatura en audio. Gratis.',
-    siteName: 'Lectoria',
+    siteName: 'Epovox',
   },
 };
 

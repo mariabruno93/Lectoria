@@ -3,8 +3,8 @@ import { createClient } from '@/lib/supabase/server';
 import BibliotecaClient from './BibliotecaClient';
 
 export const metadata: Metadata = {
-  title: 'Biblioteca — Lectoria',
-  description: 'Todos los audiolibros disponibles en Lectoria. Clásicos de la literatura en español e inglés.',
+  title: 'Biblioteca — Epovox',
+  description: 'Todos los audiolibros disponibles en Epovox. Clásicos de la literatura en español e inglés.',
 };
 
 export default async function BibliotecaPage() {

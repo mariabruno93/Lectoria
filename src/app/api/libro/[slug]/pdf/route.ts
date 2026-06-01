@@ -47,7 +47,7 @@ export async function GET(
       info: {
         Title: work.title,
         Author: (work.authors as any)?.name ?? '',
-        Creator: 'Lectoria',
+        Creator: 'Epovox',
       },
     });
 
@@ -74,7 +74,7 @@ export async function GET(
     }
 
     doc.moveDown(2);
-    doc.font('Helvetica').fontSize(10).fillColor('#aaa').text('Lectoria — lectoria.app', { align: 'center' });
+    doc.font('Helvetica').fontSize(10).fillColor('#aaa').text('Epovox — epovox.com', { align: 'center' });
 
     // ── Capítulos ──────────────────────────────────────────────────────────
     for (const chapter of chapters) {

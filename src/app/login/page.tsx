@@ -48,7 +48,7 @@ function LoginForm() {
       <div className="w-full max-w-sm">
         <Link href="/" className="flex items-center justify-center mb-8">
           <span className="text-2xl font-bold" style={{ fontFamily: 'Georgia, serif', color: '#C9933A' }}>
-            Lectoria
+            Epovox
           </span>
         </Link>
 

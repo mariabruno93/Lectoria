@@ -192,7 +192,7 @@ export default async function Home() {
       {/* ── Footer ───────────────────────────────────────────────────────── */}
       <footer className="border-t py-8 px-6 text-center text-xs"
         style={{ borderColor: '#2A2720', color: '#8A8478' }}>
-        © {new Date().getFullYear()} Lectoria · Todos los libros son de dominio público
+        © {new Date().getFullYear()} Epovox · Todos los libros son de dominio público
       </footer>
     </div>
   );

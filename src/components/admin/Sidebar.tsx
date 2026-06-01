@@ -29,7 +29,7 @@ export default function AdminSidebar() {
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
           <polygon points="6,3 20,12 6,21" fill="#C9933A" />
         </svg>
-        <span className="font-semibold text-sm" style={{ color: '#F2EDE4', fontFamily: 'Georgia, serif' }}>Lectoria</span>
+        <span className="font-semibold text-sm" style={{ color: '#F2EDE4', fontFamily: 'Georgia, serif' }}>Epovox</span>
       </Link>
 
       <p className="text-xs uppercase tracking-widest px-2 mb-3" style={{ color: '#8A8478' }}>Admin</p>

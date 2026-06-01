@@ -34,7 +34,7 @@ export default function AdminLogin() {
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
               <polygon points="6,3 20,12 6,21" fill="#C9933A" />
             </svg>
-            <span className="text-xl font-semibold" style={{ color: '#F2EDE4', fontFamily: 'Georgia, serif' }}>Lectoria</span>
+            <span className="text-xl font-semibold" style={{ color: '#F2EDE4', fontFamily: 'Georgia, serif' }}>Epovox</span>
           </div>
           <h1 className="text-2xl font-bold mb-1" style={{ color: '#F2EDE4' }}>Panel de administración</h1>
           <p className="text-sm" style={{ color: '#8A8478' }}>Ingresá con tu cuenta de administrador</p>
