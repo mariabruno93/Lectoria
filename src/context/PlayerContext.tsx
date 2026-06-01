@@ -33,6 +33,8 @@ interface PlayerState {
   isPlaying: boolean;
   currentTime: number;
   duration: number;
+  showAd: boolean;
+  pendingPlay: { book: PlayerBook; chapter: PlayerChapter } | null;
 }
 
 interface PlayerContextType extends PlayerState {
@@ -41,6 +43,7 @@ interface PlayerContextType extends PlayerState {
   seek: (time: number) => void;
   setDuration: (d: number) => void;
   setCurrentTime: (t: number) => void;
+  dismissAd: () => void;
 }
 
 const PlayerContext = createContext<PlayerContextType | null>(null);
@@ -53,14 +56,26 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     isPlaying: false,
     currentTime: 0,
     duration: 0,
+    showAd: false,
+    pendingPlay: null,
   });
 
+  // Mostrar pre-roll antes de reproducir
   const play = useCallback((book: PlayerBook, chapter: PlayerChapter) => {
-    setState((prev) => ({ ...prev, book, chapter, isPlaying: true, currentTime: 0 }));
-    if (audioRef.current) {
-      audioRef.current.src = chapter.audio_url ?? '';
-      if (chapter.audio_url) audioRef.current.play().catch(() => {});
-    }
+    setState((prev) => ({ ...prev, showAd: true, pendingPlay: { book, chapter } }));
+  }, []);
+
+  // Llamado cuando el usuario salta o termina el anuncio
+  const dismissAd = useCallback(() => {
+    setState((prev) => {
+      if (!prev.pendingPlay) return { ...prev, showAd: false };
+      const { book, chapter } = prev.pendingPlay;
+      if (audioRef.current) {
+        audioRef.current.src = chapter.audio_url ?? '';
+        if (chapter.audio_url) audioRef.current.play().catch(() => {});
+      }
+      return { ...prev, showAd: false, pendingPlay: null, book, chapter, isPlaying: true, currentTime: 0 };
+    });
   }, []);
 
   const togglePlay = useCallback(() => {
@@ -89,7 +104,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <PlayerContext.Provider value={{ ...state, play, togglePlay, seek, setDuration, setCurrentTime }}>
+    <PlayerContext.Provider value={{ ...state, play, togglePlay, seek, setDuration, setCurrentTime, dismissAd }}>
       {children}
       <audio
         ref={audioRef}
