@@ -110,6 +110,7 @@ export default async function Home() {
         style={{ background: 'radial-gradient(ellipse 80% 60% at 50% 0%, #2A1A08 0%, #0D0C0B 70%)' }}
       >
         <div className="max-w-2xl mx-auto">
+          <img src="/logo.png" alt="Epovox" width={72} height={72} className="mx-auto mb-6" style={{ objectFit: 'contain' }} />
           <p className="text-xs font-semibold uppercase tracking-widest mb-6" style={{ color: '#C9933A' }}>
             Audiolibros · Voz IA · Gratis
           </p>
