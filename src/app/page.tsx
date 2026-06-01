@@ -193,6 +193,10 @@ export default async function Home() {
       <footer className="border-t py-8 px-6 text-center text-xs"
         style={{ borderColor: '#2A2720', color: '#8A8478' }}>
         © {new Date().getFullYear()} Epovox · Todos los libros son de dominio público
+        <span className="mx-3 opacity-30">·</span>
+        <Link href="/privacidad" className="hover:opacity-70 transition-opacity" style={{ color: '#8A8478' }}>
+          Política de privacidad
+        </Link>
       </footer>
     </div>
   );
