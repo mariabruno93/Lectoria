@@ -24,6 +24,9 @@ export const metadata: Metadata = {
     description: 'Clásicos de la literatura en audio. Gratis.',
     siteName: 'Epovox',
   },
+  other: {
+    'google-adsense-account': 'ca-pub-5365119447652587',
+  },
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
