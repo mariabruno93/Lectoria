@@ -31,7 +31,7 @@ export default function AdminLogin() {
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-2 mb-6">
-            <img src="/logo.png" alt="Epovox" width={36} height={36} style={{ objectFit: 'contain' }} />
+            <img src="/logo-transparent.png" alt="Epovox" width={36} height={36} style={{ objectFit: 'contain' }} />
             <span className="text-xl font-semibold" style={{ color: '#F2EDE4', fontFamily: 'Georgia, serif' }}>Epovox</span>
           </div>
           <h1 className="text-2xl font-bold mb-1" style={{ color: '#F2EDE4' }}>Panel de administración</h1>

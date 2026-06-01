@@ -116,10 +116,10 @@ export default async function Home() {
           <h1 className="text-4xl md:text-6xl font-bold leading-tight mb-6"
             style={{ fontFamily: 'Georgia, serif', color: '#F2EDE4' }}>
             <img
-              src="/logo.png"
+              src="/logo-transparent.png"
               alt="E"
-              className="inline-block align-middle"
-              style={{ width: '0.85em', height: '0.85em', objectFit: 'contain', mixBlendMode: 'screen', marginRight: '0.02em', marginTop: '-0.1em' }}
+              className="inline-block"
+              style={{ width: '1.1em', height: '1.1em', objectFit: 'contain', verticalAlign: 'middle', marginRight: '0.04em', marginTop: '-0.15em' }}
             />scuchá a los grandes.
           </h1>
           <p className="text-lg md:text-xl mb-10" style={{ color: '#8A8478', lineHeight: 1.7 }}>
