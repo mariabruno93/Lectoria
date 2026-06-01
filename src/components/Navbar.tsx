@@ -20,7 +20,7 @@ export default async function Navbar() {
     <nav className="sticky top-0 z-40 border-b" style={{ background: 'rgba(13,12,11,0.92)', borderColor: '#2A2720', backdropFilter: 'blur(8px)' }}>
       <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
         <Link href="/" className="flex items-center group">
-          <img src="/logo2-cropped.png" alt="Epovox" style={{ objectFit: 'contain', height: '36px', width: 'auto' }} />
+          <img src="/logo2-cropped.png" alt="Epovox" style={{ objectFit: 'contain', height: '18px', width: 'auto' }} />
         </Link>
 
         <div className="flex items-center gap-6">
