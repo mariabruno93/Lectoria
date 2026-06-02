@@ -26,6 +26,7 @@ export default async function Navbar() {
         <div className="flex items-center gap-6">
           <Link href="/" className="nav-link text-sm">Inicio</Link>
           <Link href="/biblioteca" className="nav-link text-sm">Biblioteca</Link>
+          <Link href="/autores" className="nav-link text-sm">Autores</Link>
 
           {user ? (
             <NavbarUserMenu
