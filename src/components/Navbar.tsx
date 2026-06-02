@@ -27,6 +27,7 @@ export default async function Navbar() {
           <Link href="/" className="nav-link text-sm">Inicio</Link>
           <Link href="/biblioteca" className="nav-link text-sm">Biblioteca</Link>
           <Link href="/autores" className="nav-link text-sm">Autores</Link>
+          <Link href="/independientes" className="nav-link text-sm">Independientes</Link>
 
           {user ? (
             <NavbarUserMenu
