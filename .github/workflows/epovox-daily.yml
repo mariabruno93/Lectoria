@@ -1,0 +1,41 @@
+name: Epovox — card diaria + control de salud
+
+# Corre todos los días 09:00 hora Argentina (12:00 UTC).
+# También se puede disparar a mano desde la pestaña Actions (workflow_dispatch).
+on:
+  schedule:
+    - cron: "0 12 * * *"
+  workflow_dispatch:
+
+jobs:
+  epovox:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout del repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Crear .env.local desde los Secrets
+        run: |
+          {
+            echo "NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}"
+            echo "SUPABASE_SERVICE_ROLE_KEY=${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}"
+            echo "RESEND_API_KEY=${{ secrets.RESEND_API_KEY }}"
+            echo "RESEND_FROM_EMAIL=${{ secrets.RESEND_FROM_EMAIL }}"
+            echo "EPOVOX_ALERT_EMAIL=${{ secrets.EPOVOX_ALERT_EMAIL }}"
+          } > .env.local
+
+      - name: Agregar 1 cuento (card diaria)
+        run: node scripts/daily-card.mjs
+
+      - name: Control de salud auto-reparador
+        if: always()   # corre aunque la card diaria falle, así igual repara lo viejo
+        run: node scripts/health-check.mjs

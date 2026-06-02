@@ -776,6 +776,16 @@ export const STORIES = [
     description: 'Benincasa, un naturalista porteño, se adentra en la selva misionera y descubre un panal de miel silvestre. La selva tiene sus propias reglas y él está a punto de aprenderlas.',
     descriptionEn: 'Benincasa, a Buenos Aires naturalist, ventures into the Misiones jungle and discovers a wild honeycomb. The jungle has its own rules and he is about to learn them.',
   },
+  {
+    slug: 'el-hombre-muerto',
+    ciudasdevaSlug: 'el-hombre-muerto',
+    title: 'El hombre muerto',
+    titleEn: 'The Dead Man',
+    authorSlug: 'horacio-quiroga',
+    year: 1920,
+    description: 'Un hombre acaba de limpiar su bananal y, al cruzar un alambrado, tropieza y cae sobre su propio machete. Tendido en la tierra, contempla con lucidez los minutos finales de una muerte absurda y cotidiana.',
+    descriptionEn: 'A man has just cleared his banana grove and, crossing a wire fence, trips and falls onto his own machete. Lying on the ground, he lucidly contemplates the final minutes of an absurd, ordinary death.',
+  },
 
   // ── Kate Chopin ───────────────────────────────────────────────────────────
   {

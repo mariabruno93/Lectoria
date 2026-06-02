@@ -36,6 +36,9 @@ yarn-error.log*
 # vercel
 .vercel
 
+# generated subtitles (uploaded to Supabase Storage)
+/scripts/subtitles/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
