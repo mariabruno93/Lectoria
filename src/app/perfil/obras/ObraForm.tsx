@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 
@@ -12,6 +12,7 @@ type WorkData = {
   language: string;
   is_public: boolean;
   status: 'draft' | 'published' | 'archived';
+  audio_url?: string | null;
 };
 
 const INPUT  = 'w-full px-4 py-3 rounded-xl text-sm outline-none';
@@ -23,11 +24,16 @@ export default function ObraForm({ userId, initial }: { userId: string; initial?
   const isNew = !initial?.id;
 
   const [form, setForm] = useState<WorkData>(initial ?? {
-    title: '', description: '', content: '', language: 'es', is_public: false, status: 'draft',
+    title: '', description: '', content: '', language: 'es', is_public: false, status: 'draft', audio_url: null,
   });
-  const [loading, setLoading]   = useState(false);
-  const [deleting, setDeleting] = useState(false);
-  const [msg, setMsg]           = useState('');
+  const [loading, setLoading]     = useState(false);
+  const [deleting, setDeleting]   = useState(false);
+  const [msg, setMsg]             = useState('');
+  const [audioTab, setAudioTab]   = useState<'upload' | 'generate'>('generate');
+  const [voice, setVoice]         = useState('es-elena');
+  const [generating, setGenerating] = useState(false);
+  const [uploading, setUploading]   = useState(false);
+  const audioFileRef = useRef<HTMLInputElement>(null);
 
   const set = (k: keyof WorkData, v: any) => setForm(f => ({ ...f, [k]: v }));
 
@@ -53,6 +59,46 @@ export default function ObraForm({ userId, initial }: { userId: string; initial?
     if (error) { setMsg('Error: ' + error.message); setLoading(false); return; }
     router.push('/perfil/obras');
     router.refresh();
+  }
+
+  async function handleGenerateAudio() {
+    if (!form.id) { setMsg('Guardá la obra primero antes de generar audio.'); return; }
+    if (!form.content?.trim()) { setMsg('Escribí el texto antes de generar audio.'); return; }
+    setGenerating(true); setMsg('');
+    const res = await fetch('/api/user/generate-audio', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ workId: form.id, voice }),
+    });
+    const data = await res.json();
+    if (data.url) {
+      set('audio_url', data.url);
+      setMsg('Audio generado correctamente ✓');
+    } else {
+      setMsg('Error: ' + (data.error ?? 'No se pudo generar el audio'));
+    }
+    setGenerating(false);
+  }
+
+  async function handleUploadAudio(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file || !form.id) return;
+    setUploading(true); setMsg('');
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('bucket', 'audio');
+    formData.append('path', `user-works/${form.id}.mp3`);
+    const res = await fetch('/api/admin/upload', { method: 'POST', body: formData });
+    const data = await res.json();
+    if (data.url) {
+      set('audio_url', data.url);
+      await supabase.from('user_works').update({ audio_url: data.url }).eq('id', form.id);
+      setMsg('Audio subido correctamente ✓');
+    } else {
+      setMsg('Error al subir: ' + (data.error ?? 'sin respuesta'));
+    }
+    setUploading(false);
+    e.target.value = '';
   }
 
   async function handleDelete() {
@@ -129,6 +175,100 @@ export default function ObraForm({ userId, initial }: { userId: string; initial?
               {form.content.trim().split(/\s+/).filter(Boolean).length} palabras
             </p>
           )}
+        </div>
+
+        {/* ── Audio ──────────────────────────────────────────────────── */}
+        <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid #2A2720' }}>
+          <div className="px-4 pt-4 pb-3" style={{ background: '#111' }}>
+            <p className="text-sm font-medium mb-1" style={{ color: '#F2EDE4' }}>Audio</p>
+            <p className="text-xs" style={{ color: '#6A6460' }}>
+              Generá el audio con IA o subí tu propia grabación.
+            </p>
+          </div>
+
+          {/* Audio actual */}
+          {form.audio_url && (
+            <div className="px-4 py-3" style={{ background: '#0D0C0B', borderBottom: '1px solid #2A2720' }}>
+              <p className="text-xs mb-2" style={{ color: '#8A8478' }}>Audio actual:</p>
+              <audio controls src={form.audio_url} className="w-full" style={{ height: 36 }} />
+            </div>
+          )}
+
+          {/* Tabs */}
+          <div className="flex" style={{ background: '#111', borderBottom: '1px solid #2A2720' }}>
+            {[
+              { id: 'generate', label: '✨ Generar con IA' },
+              { id: 'upload',   label: '🎙 Subir mi audio' },
+            ].map(t => (
+              <button key={t.id} type="button"
+                onClick={() => setAudioTab(t.id as any)}
+                className="flex-1 py-2.5 text-xs font-medium transition-colors"
+                style={{
+                  color: audioTab === t.id ? '#C9933A' : '#6A6460',
+                  borderBottom: audioTab === t.id ? '2px solid #C9933A' : '2px solid transparent',
+                  background: 'transparent',
+                }}>
+                {t.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="p-4" style={{ background: '#0D0C0B' }}>
+            {audioTab === 'generate' ? (
+              <div className="flex flex-col gap-3">
+                <p className="text-xs" style={{ color: '#8A8478' }}>Elegí la voz:</p>
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    { id: 'es-elena', label: 'Elena', desc: 'Mujer · Español AR' },
+                    { id: 'es-jorge', label: 'Jorge', desc: 'Hombre · Español MX' },
+                    { id: 'en-jenny', label: 'Jenny', desc: 'Mujer · Inglés' },
+                  ].map(v => (
+                    <button key={v.id} type="button" onClick={() => setVoice(v.id)}
+                      className="flex flex-col items-start px-4 py-2.5 rounded-xl transition-all"
+                      style={{
+                        background: voice === v.id ? '#C9933A22' : '#1A1816',
+                        border: `1px solid ${voice === v.id ? '#C9933A' : '#2A2720'}`,
+                      }}>
+                      <span className="text-sm font-medium" style={{ color: voice === v.id ? '#C9933A' : '#F2EDE4' }}>
+                        {v.label}
+                      </span>
+                      <span className="text-xs" style={{ color: '#6A6460' }}>{v.desc}</span>
+                    </button>
+                  ))}
+                </div>
+                {!form.id && (
+                  <p className="text-xs" style={{ color: '#6A6460' }}>
+                    Guardá la obra primero para poder generar el audio.
+                  </p>
+                )}
+                <button type="button" onClick={handleGenerateAudio}
+                  disabled={generating || !form.id || !form.content?.trim()}
+                  className="py-2.5 rounded-full text-sm font-semibold transition-opacity hover:opacity-80 disabled:opacity-40"
+                  style={{ background: '#C9933A', color: '#fff' }}>
+                  {generating ? 'Generando audio… puede tardar unos segundos' : form.audio_url ? 'Regenerar audio' : 'Generar audio'}
+                </button>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-3">
+                <p className="text-xs" style={{ color: '#8A8478' }}>
+                  Subí un archivo MP3 o WAV grabado con tu voz.
+                </p>
+                {!form.id && (
+                  <p className="text-xs" style={{ color: '#6A6460' }}>
+                    Guardá la obra primero para poder subir audio.
+                  </p>
+                )}
+                <button type="button"
+                  disabled={!form.id || uploading}
+                  onClick={() => audioFileRef.current?.click()}
+                  className="py-2.5 rounded-full text-sm font-semibold transition-opacity hover:opacity-80 disabled:opacity-40"
+                  style={{ background: '#2A2720', color: '#F2EDE4' }}>
+                  {uploading ? 'Subiendo…' : form.audio_url ? 'Reemplazar audio' : 'Elegir archivo de audio'}
+                </button>
+                <input ref={audioFileRef} type="file" accept="audio/*" className="hidden" onChange={handleUploadAudio} />
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Visibilidad */}

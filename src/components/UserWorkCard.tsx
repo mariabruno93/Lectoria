@@ -21,7 +21,7 @@ export default function UserWorkCard({ work }: { work: UserWork }) {
   const to   = `hsl(${hue}, 20%, 10%)`;
 
   return (
-    <Link href={`/independientes/${work.user_id}`} className="group block">
+    <Link href={`/obra/${work.id}`} className="group block">
       {/* Cover */}
       <div
         className="aspect-[2/3] rounded-xl mb-3 relative overflow-hidden"

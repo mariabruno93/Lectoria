@@ -89,7 +89,7 @@ export default async function AutorIndependientePage({ params }: { params: Promi
 
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-5">
           {works.map(work => (
-            <UserWorkCard key={work.id} work={{ ...work, profiles: profile } as any} />
+            <UserWorkCard key={work.id} work={{ ...work, profiles: profile, user_id: userId } as any} />
           ))}
         </div>
       </div>
