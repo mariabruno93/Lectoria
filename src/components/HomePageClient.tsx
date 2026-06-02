@@ -12,10 +12,19 @@ interface Section {
   href?: string;
 }
 
+interface Author {
+  id: string;
+  slug: string;
+  name: string;
+  photo_url: string | null;
+  nationality: string | null;
+}
+
 interface Props {
   sections: Section[];
   userId: string | null;
   initialLibraryMap: Record<string, LibraryEntry>;
+  authors?: Author[];
 }
 
 /* ─── Arrow button ─────────────────────────────────────────────────────────── */
@@ -137,18 +146,119 @@ function ScrollRow({
   );
 }
 
+/* ─── Author scroll row ────────────────────────────────────────────────────── */
+function AuthorScrollRow({ authors }: { authors: Author[] }) {
+  const rowRef = useRef<HTMLDivElement>(null);
+  const [canLeft, setCanLeft] = useState(false);
+  const [canRight, setCanRight] = useState(false);
+
+  function checkScroll() {
+    const el = rowRef.current;
+    if (!el) return;
+    setCanLeft(el.scrollLeft > 4);
+    setCanRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 4);
+  }
+
+  useEffect(() => {
+    checkScroll();
+    const el = rowRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(checkScroll);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [authors]);
+
+  function scroll(dir: 'left' | 'right') {
+    const el = rowRef.current;
+    if (!el) return;
+    el.scrollBy({ left: dir === 'left' ? -el.clientWidth * 0.75 : el.clientWidth * 0.75, behavior: 'smooth' });
+  }
+
+  return (
+    <div className="relative">
+      {canLeft && (
+        <div className="absolute left-0 top-0 bottom-2 w-10 z-20 pointer-events-none"
+          style={{ background: 'linear-gradient(to right, #0D0C0B 0%, transparent 100%)' }} />
+      )}
+      <ArrowBtn dir="left" visible={canLeft} onClick={() => scroll('left')} />
+
+      <div
+        ref={rowRef}
+        onScroll={checkScroll}
+        className="flex gap-5 overflow-x-auto pb-2"
+        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' } as React.CSSProperties}
+      >
+        {authors.map(author => (
+          <Link
+            key={author.id}
+            href={`/autor/${author.slug}`}
+            className="flex-none flex flex-col items-center gap-2 group"
+            style={{ width: '88px' }}
+          >
+            <div
+              className="w-16 h-16 rounded-full overflow-hidden flex-shrink-0 transition-transform group-hover:scale-105"
+              style={{ border: '2px solid #2A2720' }}
+            >
+              {author.photo_url ? (
+                <img src={author.photo_url} alt={author.name}
+                  className="w-full h-full object-cover" loading="lazy" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-xl font-bold"
+                  style={{ background: '#1A1816', color: '#C9933A', fontFamily: 'Georgia, serif' }}>
+                  {author.name.charAt(0)}
+                </div>
+              )}
+            </div>
+            <p className="text-xs text-center leading-tight line-clamp-2 group-hover:text-amber-400 transition-colors"
+              style={{ color: '#A09890' }}>
+              {author.name}
+            </p>
+          </Link>
+        ))}
+      </div>
+
+      <ArrowBtn dir="right" visible={canRight} onClick={() => scroll('right')} />
+      {canRight && (
+        <div className="absolute right-0 top-0 bottom-2 w-10 z-20 pointer-events-none"
+          style={{ background: 'linear-gradient(to left, #0D0C0B 0%, transparent 100%)' }} />
+      )}
+    </div>
+  );
+}
+
 /* ─── Main component ───────────────────────────────────────────────────────── */
-export default function HomePageClient({ sections, userId, initialLibraryMap }: Props) {
+export default function HomePageClient({ sections, userId, initialLibraryMap, authors = [] }: Props) {
   const [libraryMap, setLibraryMap] = useState<Record<string, LibraryEntry>>(initialLibraryMap);
 
   const handleUpdate = useCallback((workId: string, entry: LibraryEntry) => {
     setLibraryMap(prev => ({ ...prev, [workId]: entry }));
   }, []);
 
-  if (sections.every(s => s.works.length === 0)) return null;
+  if (sections.every(s => s.works.length === 0) && authors.length === 0) return null;
 
   return (
     <div className="py-10 flex flex-col gap-12">
+
+      {/* ── Carrusel de autores ──────────────────────────────────────────── */}
+      {authors.length > 0 && (
+        <section className="max-w-6xl mx-auto w-full px-6">
+          <div className="flex items-center justify-between mb-5">
+            <h2 className="text-lg font-semibold"
+              style={{ fontFamily: 'Georgia, serif', color: '#F2EDE4' }}>
+              Autores
+            </h2>
+            <Link
+              href="/autores"
+              className="text-sm font-medium px-4 py-1.5 rounded-full transition-opacity hover:opacity-80"
+              style={{ background: '#1A1816', border: '1px solid #2A2720', color: '#C9933A' }}
+            >
+              Ver todos →
+            </Link>
+          </div>
+          <AuthorScrollRow authors={authors} />
+        </section>
+      )}
+
       {sections.map((section) => {
         if (section.works.length === 0) return null;
         return (

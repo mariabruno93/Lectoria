@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import HomePageClient from '@/components/HomePageClient';
 import type { LibraryEntry } from '@/components/LibraryButtons';
+import type { Author } from '@/types';
 
 // Géneros que califican como "Terror"
 const TERROR_GENRES = new Set([
@@ -27,6 +28,16 @@ export default async function Home() {
     .order('created_at', { ascending: false });
 
   const works = allWorks ?? [];
+
+  // ─── Autores para carrusel ───────────────────────────────────────────────
+  const { data: authorsRaw } = await supabase
+    .from('authors')
+    .select('id, slug, name, photo_url, nationality')
+    .order('name', { ascending: true });
+
+  // Solo autores que tienen obras
+  const authorIdsWithWorks = new Set(works.map(w => w.author_id).filter(Boolean));
+  const authors = (authorsRaw ?? []).filter(a => authorIdsWithWorks.has(a.id));
 
   // ─── Popularidad (plays count) ───────────────────────────────────────────
   const { data: plays } = await supabase.from('plays').select('work_id');
@@ -128,11 +139,6 @@ export default async function Home() {
               style={{ background: '#C9933A', color: '#fff' }}>
               Explorar biblioteca
             </Link>
-            <Link href="#como-funciona"
-              className="px-8 py-3 rounded-full text-sm font-semibold border transition-colors hover:opacity-80"
-              style={{ borderColor: '#2A2720', color: '#8A8478' }}>
-              ¿Cómo funciona?
-            </Link>
           </div>
         </div>
       </section>
@@ -142,34 +148,8 @@ export default async function Home() {
         sections={sections}
         userId={userId}
         initialLibraryMap={libraryMap}
+        authors={authors}
       />
-
-      {/* ── Cómo funciona ────────────────────────────────────────────────── */}
-      <section id="como-funciona" className="border-t py-16 px-6"
-        style={{ borderColor: '#2A2720' }}>
-        <div className="max-w-3xl mx-auto text-center">
-          <h2 className="text-2xl font-semibold mb-12"
-            style={{ fontFamily: 'Georgia, serif', color: '#F2EDE4' }}>
-            ¿Cómo funciona?
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-10">
-            {[
-              { n: '01', title: 'Elegí un título', desc: 'Navegá nuestra biblioteca de clásicos en español e inglés.' },
-              { n: '02', title: 'Escuchá o leé', desc: 'Reproductor de audio con read-along sincronizado.' },
-              { n: '03', title: 'Seguí tu progreso', desc: 'Marcá lo que estás escuchando y lo que terminaste.' },
-            ].map(({ n, title, desc }) => (
-              <div key={n} className="flex flex-col items-center gap-3">
-                <span className="text-3xl font-bold"
-                  style={{ fontFamily: 'Georgia, serif', color: '#C9933A', opacity: 0.4 }}>
-                  {n}
-                </span>
-                <h3 className="font-semibold" style={{ color: '#F2EDE4' }}>{title}</h3>
-                <p className="text-sm text-center" style={{ color: '#8A8478', lineHeight: 1.7 }}>{desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
 
       {/* ── PDF teaser ───────────────────────────────────────────────────── */}
       <section className="py-12 px-6">
