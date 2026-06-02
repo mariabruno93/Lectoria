@@ -161,28 +161,18 @@ export default function AutorClient({
                 .filter(Boolean).join(' · ')}
             </p>
 
-            {/* Botones */}
-            <div className="flex items-center gap-4 justify-center sm:justify-start flex-wrap">
-              <button
-                onClick={handlePlayAll}
-                className="flex items-center gap-2.5 px-7 py-3 rounded-full text-sm font-semibold transition-opacity hover:opacity-80"
-                style={{ background: '#C9933A', color: '#fff' }}
-              >
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="white"><polygon points="6,3 20,12 6,21" /></svg>
-                Reproducir todo
-              </button>
-              <div className="flex gap-5">
+            {/* Stats */}
+            <div className="flex gap-5 justify-center sm:justify-start">
+              <span className="text-center">
+                <p className="text-xl font-bold" style={{ fontFamily: 'Georgia, serif', color: '#F2EDE4' }}>{totalWorks}</p>
+                <p className="text-xs" style={{ color: '#6A6460' }}>obras</p>
+              </span>
+              {totalPlays > 0 && (
                 <span className="text-center">
-                  <p className="text-xl font-bold" style={{ fontFamily: 'Georgia, serif', color: '#F2EDE4' }}>{totalWorks}</p>
-                  <p className="text-xs" style={{ color: '#6A6460' }}>obras</p>
+                  <p className="text-xl font-bold" style={{ fontFamily: 'Georgia, serif', color: '#F2EDE4' }}>{totalPlays}</p>
+                  <p className="text-xs" style={{ color: '#6A6460' }}>reproducciones</p>
                 </span>
-                {totalPlays > 0 && (
-                  <span className="text-center">
-                    <p className="text-xl font-bold" style={{ fontFamily: 'Georgia, serif', color: '#F2EDE4' }}>{totalPlays}</p>
-                    <p className="text-xs" style={{ color: '#6A6460' }}>reproducciones</p>
-                  </span>
-                )}
-              </div>
+              )}
             </div>
           </div>
         </div>
