@@ -1,6 +1,8 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Author, Work, Chapter } from '@/types';
 import { usePlayer, PlayerBook, PlayerChapter } from '@/context/PlayerContext';
 
@@ -36,72 +38,46 @@ function PlayBtn({ onClick, size = 36 }: { onClick: (e: React.MouseEvent) => voi
 
 /* ── fila de obra ───────────────────────────────────────────────────────── */
 function WorkRow({ work, onPlay }: { work: Work; onPlay: (ch: Chapter) => void }) {
-  const [open, setOpen] = useState(false);
   const chapters = (work.chapters ?? []).slice().sort((a, b) => (a as any).chapter_number - (b as any).chapter_number);
   const isStory = work.type === 'story';
   const firstAudio = chapters.find(c => c.audio_url);
 
   return (
     <div className="border-b" style={{ borderColor: '#1E1C1A' }}>
-      {/* cabecera de la obra */}
       <div className="flex items-center gap-4 py-3.5">
-        {/* mini portada */}
-        <div
-          className={`flex-shrink-0 rounded-lg overflow-hidden ${isStory ? 'w-10 h-10' : 'w-10 h-14'}`}
-          style={{ background: `linear-gradient(140deg, ${work.cover_gradient_from}, ${work.cover_gradient_to})` }}
-        >
-          {(work as any).cover_url && (
-            <img src={(work as any).cover_url} alt={work.title} className="w-full h-full object-cover" />
-          )}
-        </div>
+        {/* mini portada — clickeable va a la página del libro */}
+        <Link href={`/libro/${work.slug}`} className="flex-shrink-0">
+          <div
+            className={`rounded-lg overflow-hidden transition-opacity hover:opacity-80 ${isStory ? 'w-10 h-10' : 'w-10 h-14'}`}
+            style={{ background: `linear-gradient(140deg, ${work.cover_gradient_from}, ${work.cover_gradient_to})` }}
+          >
+            {(work as any).cover_url && (
+              <img src={(work as any).cover_url} alt={work.title} className="w-full h-full object-cover" />
+            )}
+          </div>
+        </Link>
 
-        {/* info */}
-        <div className="flex-1 min-w-0">
+        {/* info — clickeable va a la página del libro */}
+        <Link href={`/libro/${work.slug}`} className="flex-1 min-w-0 hover:opacity-80 transition-opacity">
           <p className="text-sm font-medium leading-tight" style={{ color: '#F2EDE4' }}>{work.title}</p>
           <p className="text-xs mt-0.5" style={{ color: '#6A6460' }}>
             {work.year}
             {isStory ? ' · cuento' : chapters.length > 0 ? ` · ${chapters.length} caps.` : ''}
             {work.duration_label ? ` · ${work.duration_label}` : ''}
           </p>
-        </div>
+        </Link>
 
-        {/* acciones */}
-        <div className="flex items-center gap-2 flex-shrink-0">
-          {/* expandir capítulos (solo libros con múltiples caps) */}
-          {!isStory && chapters.length > 1 && (
-            <button
-              onClick={() => setOpen(o => !o)}
-              className="text-xs px-3 py-1 rounded-full transition-colors"
-              style={{ background: '#2A2720', color: '#8A8478' }}
-            >
-              {open ? 'Cerrar ▲' : `${chapters.length} caps ▼`}
-            </button>
+        {/* acción: libros → ir a la página | cuentos → play directo */}
+        <div className="flex-shrink-0">
+          {isStory && firstAudio ? (
+            <PlayBtn size={34} onClick={(e) => { e.stopPropagation(); onPlay(firstAudio); }} />
+          ) : (
+            <Link href={`/libro/${work.slug}`}>
+              <PlayBtn size={34} onClick={(e) => {}} />
+            </Link>
           )}
-          {/* play del primer capítulo */}
-          {firstAudio && <PlayBtn size={34} onClick={(e) => { e.stopPropagation(); onPlay(firstAudio); }} />}
         </div>
       </div>
-
-      {/* lista de capítulos (expandida) */}
-      {open && chapters.length > 0 && (
-        <div className="pb-3 pl-14 pr-2">
-          {chapters.map((ch, i) => (
-            <div key={ch.id} className="flex items-center gap-3 py-2 rounded-lg px-2 -mx-2 hover:bg-white/[0.03] transition-colors">
-              <span className="text-xs w-5 text-right flex-shrink-0 tabular-nums" style={{ color: '#3A3728' }}>
-                {i + 1}
-              </span>
-              <p className="flex-1 text-sm truncate" style={{ color: '#A09890' }}>{ch.title}</p>
-              {ch.duration_label && (
-                <span className="text-xs flex-shrink-0" style={{ color: '#3A3728' }}>{ch.duration_label}</span>
-              )}
-              {ch.audio_url
-                ? <PlayBtn size={26} onClick={(e) => { e.stopPropagation(); onPlay(ch); }} />
-                : <span className="w-[26px]" />
-              }
-            </div>
-          ))}
-        </div>
-      )}
     </div>
   );
 }
@@ -116,6 +92,7 @@ export default function AutorClient({
   playCount: Record<string, number>;
 }) {
   const { play } = usePlayer();
+  const router = useRouter();
 
   const allWorks = [...books, ...stories];
   const totalWorks = allWorks.length;
@@ -128,12 +105,16 @@ export default function AutorClient({
     play(toPlayerBook(work), toPlayerChapter(ch));
   }
 
+  // "Reproducir todo": si hay cuentos, arranca el primero; si solo hay libros, va al primero
   function handlePlayAll() {
-    for (const work of allWorks) {
+    // priorizar cuentos (tienen play directo)
+    for (const work of stories) {
       const chs = (work.chapters ?? []).slice().sort((a, b) => (a as any).chapter_number - (b as any).chapter_number);
       const first = chs.find(c => c.audio_url);
-      if (first) { play(toPlayerBook(work), toPlayerChapter(first)); break; }
+      if (first) { play(toPlayerBook(work), toPlayerChapter(first)); return; }
     }
+    // si solo hay libros, ir a la página del primero
+    if (books[0]) router.push(`/libro/${books[0].slug}`);
   }
 
   return (
