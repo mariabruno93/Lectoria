@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import BookCard from '@/components/BookCard';
@@ -199,8 +200,24 @@ export default function PerfilClient({
         )}
       </div>
 
-      {/* ── Logout ──────────────────────────────────────────────────── */}
+      {/* ── Mis obras ───────────────────────────────────────────────── */}
       <div className="mt-10 pt-8" style={{ borderTop: '1px solid #2A2720' }}>
+        <Link href="/perfil/obras"
+          className="flex items-center justify-between w-full py-4 px-5 rounded-2xl transition-colors hover:bg-white/[0.03]"
+          style={{ background: '#1A1816', border: '1px solid #2A2720' }}>
+          <div className="flex items-center gap-3">
+            <span style={{ fontSize: 20 }}>✍️</span>
+            <div>
+              <p className="text-sm font-medium" style={{ color: '#F2EDE4' }}>Mis obras</p>
+              <p className="text-xs" style={{ color: '#8A8478' }}>Publicá y gestioná tus propias obras</p>
+            </div>
+          </div>
+          <span style={{ color: '#C9933A' }}>→</span>
+        </Link>
+      </div>
+
+      {/* ── Logout ──────────────────────────────────────────────────── */}
+      <div className="mt-4 pt-4" style={{ borderTop: '1px solid #2A2720' }}>
         <button onClick={handleLogout}
           className="w-full py-3 rounded-full text-sm font-medium transition-opacity hover:opacity-80"
           style={{ background: '#1A1816', border: '1px solid #2A2720', color: '#8A8478' }}>
