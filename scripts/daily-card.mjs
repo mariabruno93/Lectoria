@@ -84,7 +84,28 @@ if (!workBySlug[story.slug]) {
 }
 
 // ── 4. audio + read-along → subtítulos ─────────────────────────────────────
-run(`node scripts/seed-ciudadseva.mjs ${story.slug}`); // audio + paragraph_timings + upload
-run(`node scripts/make-subtitles.mjs ${story.slug} es`, { EPOVOX_GENERO: genero }); // .srt/.vtt + Storage
+try {
+  run(`node scripts/seed-ciudadseva.mjs ${story.slug}`); // audio + paragraph_timings + upload
+} catch (e) {
+  console.error(`\n✗ Error en seed para ${story.slug}: ${e.message ?? e}`);
+  console.error('  El cuento no se pudo procesar. Revisá los logs de arriba para el detalle.');
+  process.exit(1);
+}
+
+// Solo generar subtítulos si el capítulo quedó guardado en la DB
+const { data: savedChapter } = await supabase
+  .from('chapters').select('id').eq('work_id', workBySlug[story.slug] ?? '')
+  .eq('chapter_number', 1).eq('lang', 'es').maybeSingle();
+
+if (savedChapter) {
+  try {
+    run(`node scripts/make-subtitles.mjs ${story.slug} es`, { EPOVOX_GENERO: genero });
+  } catch (e) {
+    console.warn(`  Advertencia: no se pudieron generar subtítulos para ${story.slug}: ${e.message ?? e}`);
+    // No falla el job por los subtítulos — el audio ya está cargado
+  }
+} else {
+  console.warn(`  Advertencia: el capítulo no quedó en la DB, saltando subtítulos.`);
+}
 
 console.log(`\n✓ Card agregada: ${story.slug}. Quedan ${pending.length - 1} en la cola.`);

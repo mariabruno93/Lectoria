@@ -172,10 +172,22 @@ function chunkText(text, max) {
   return chunks.length > 0 ? chunks : [clean];
 }
 
+// Textos > 35.000 chars (~45 min audio) usan 48kbps para no superar el límite de 50MB de Storage.
+// A 96kbps: ~12KB/seg → 45min = ~32MB ✓ | 90min = ~65MB ✗
+// A 48kbps: ~6KB/seg  → 90min = ~32MB ✓
+const LONG_TEXT_THRESHOLD = 35_000;
+function getOutputFormat(text) {
+  return text.length > LONG_TEXT_THRESHOLD
+    ? OUTPUT_FORMAT.AUDIO_24KHZ_48KBITRATE_MONO_MP3
+    : OUTPUT_FORMAT.AUDIO_24KHZ_96KBITRATE_MONO_MP3;
+}
+
 async function generateAudioWithTimings(text, voice) {
   const cleanedText = cleanForTTS(text);
   const chunks = chunkText(text);
   const paragraphs = cleanedText.split('\n\n').map(p => p.trim()).filter(p => p.length > 20);
+  const format = getOutputFormat(cleanedText);
+  if (text.length > LONG_TEXT_THRESHOLD) console.log('  Texto largo → usando 48kbps para no superar límite de Storage');
 
   const wordParaMap = [];
   for (let pi = 0; pi < paragraphs.length; pi++) {
@@ -189,28 +201,43 @@ async function generateAudioWithTimings(text, voice) {
   const allBuffers = [];
 
   for (const chunk of chunks) {
-    const tts = new MsEdgeTTS();
-    await tts.setMetadata(voice, OUTPUT_FORMAT.AUDIO_24KHZ_96KBITRATE_MONO_MP3);
     const bufs = [];
     let chunkEndMs = 0;
 
-    await new Promise((res, rej) => {
-      const { audioStream, metadataStream } = tts.toStream(chunk);
-      audioStream.on('data', d => bufs.push(d));
-      audioStream.on('end', res);
-      audioStream.on('error', rej);
-      metadataStream?.on('data', event => {
-        if (event.type !== 'WordBoundary') return;
-        const offsetMs = (event.offset ?? 0) / 10000;
-        const durMs = (event.duration ?? 0) / 10000;
-        chunkEndMs = Math.max(chunkEndMs, offsetMs + durMs);
-        if (globalWordIdx < wordParaMap.length) {
-          const pi = wordParaMap[globalWordIdx];
-          if (paraTimingsMs[pi] < 0) paraTimingsMs[pi] = chunkStartMs + offsetMs;
+    // Reintentos ante errores transitorios del servicio TTS (503, timeouts, etc.)
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      bufs.length = 0;
+      chunkEndMs = 0;
+      try {
+        const tts = new MsEdgeTTS();
+        await tts.setMetadata(voice, format);
+        await new Promise((res, rej) => {
+          const { audioStream, metadataStream } = tts.toStream(chunk);
+          audioStream.on('data', d => bufs.push(d));
+          audioStream.on('end', res);
+          audioStream.on('error', rej);
+          metadataStream?.on('data', event => {
+            if (event.type !== 'WordBoundary') return;
+            const offsetMs = (event.offset ?? 0) / 10000;
+            const durMs = (event.duration ?? 0) / 10000;
+            chunkEndMs = Math.max(chunkEndMs, offsetMs + durMs);
+            if (globalWordIdx < wordParaMap.length) {
+              const pi = wordParaMap[globalWordIdx];
+              if (paraTimingsMs[pi] < 0) paraTimingsMs[pi] = chunkStartMs + offsetMs;
+            }
+            globalWordIdx++;
+          });
+        });
+        break; // éxito → salir del loop de reintentos
+      } catch (e) {
+        if (attempt < 3) {
+          console.log(`  TTS error (intento ${attempt}/3): ${e.message} — reintentando en 5s...`);
+          await delay(5000);
+        } else {
+          throw e; // agotados los reintentos
         }
-        globalWordIdx++;
-      });
-    });
+      }
+    }
 
     const buf = Buffer.concat(bufs);
     allBuffers.push(buf);
