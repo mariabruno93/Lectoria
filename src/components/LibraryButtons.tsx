@@ -22,12 +22,14 @@ export default function LibraryButtons({ workId, userId, initialStatus, onUpdate
     initialStatus ?? { is_following: false, is_playing: false, is_finished: false }
   );
   const [loadingField, setLoadingField] = useState<string | null>(null);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   async function toggle(field: 'is_following' | 'is_finished', e: React.MouseEvent) {
     e.preventDefault();
     e.stopPropagation();
     if (loadingField) return;
     setLoadingField(field);
+    setErrorMsg(null);
 
     const newValue = !status[field];
     const newStatus = { ...status, [field]: newValue };
@@ -43,16 +45,20 @@ export default function LibraryButtons({ workId, userId, initialStatus, onUpdate
           {
             user_id: userId,
             work_id: workId,
-            [field]: newValue,
+            is_following: newStatus.is_following,
+            is_playing:   newStatus.is_playing,
+            is_finished:  newStatus.is_finished,
             updated_at: new Date().toISOString(),
           },
           { onConflict: 'user_id,work_id' }
         );
       if (error) throw error;
-    } catch {
-      // Revert on error
+    } catch (err: any) {
+      // Revert on error + mostrar mensaje
       setStatus(status);
       onUpdate?.(workId, status);
+      setErrorMsg('No se pudo guardar');
+      setTimeout(() => setErrorMsg(null), 3000);
     } finally {
       setLoadingField(null);
     }
@@ -60,6 +66,11 @@ export default function LibraryButtons({ workId, userId, initialStatus, onUpdate
 
   return (
     <>
+      {errorMsg && (
+        <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: '#2D0A0A', color: '#ef4444' }}>
+          {errorMsg}
+        </span>
+      )}
       {/* Follow / bookmark button */}
       <button
         onClick={(e) => toggle('is_following', e)}

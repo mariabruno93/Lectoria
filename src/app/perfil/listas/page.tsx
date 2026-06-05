@@ -2,6 +2,8 @@ import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import ListasClient from './ListasClient';
 
+export const dynamic = 'force-dynamic';
+
 export default async function ListasPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
