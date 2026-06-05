@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePlayer } from '@/context/PlayerContext';
+import LibraryButtons, { type LibraryEntry } from '@/components/LibraryButtons';
 
 // ── Read-Along Panel ───────────────────────────────────────────────────────
 
@@ -147,7 +148,7 @@ function ChapterRow({ work, chapter }: { work: any; chapter: any }) {
 
 // ── Main LibroClient ───────────────────────────────────────────────────────
 
-export default function LibroClient({ work }: { work: any }) {
+export default function LibroClient({ work, userId, libraryStatus }: { work: any; userId?: string | null; libraryStatus?: LibraryEntry | null }) {
   const { play, book: activeBook, chapter: activeChapter, isPlaying, currentTime, duration } = usePlayer();
   const isThisBookActive = activeBook?.slug === work.slug;
   const isStory = work.type === 'story';
@@ -208,6 +209,20 @@ export default function LibroClient({ work }: { work: any }) {
                 <><svg width="15" height="15" viewBox="0 0 24 24" fill="white"><polygon points="5,3 19,12 5,21" /></svg>{isStory ? 'Escuchar cuento' : 'Reproducir libro'}</>
               )}
             </button>
+          )}
+
+          {/* Botones de biblioteca: seguir + marcar terminado */}
+          {userId && work.id && (
+            <div className="flex items-center gap-3 pt-1">
+              <LibraryButtons
+                workId={work.id}
+                userId={userId}
+                initialStatus={libraryStatus ?? null}
+              />
+              <span className="text-xs" style={{ color: '#6A6460' }}>
+                Guardá o marcá como terminado
+              </span>
+            </div>
           )}
 
           {/* Botón Leer — para cuentos: reader de texto; para libros: PDF */}

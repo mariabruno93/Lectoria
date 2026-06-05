@@ -40,5 +40,17 @@ export default async function LibroPage({
 
   if (!work) notFound();
 
-  return <LibroClient work={work} />;
+  const { data: { user } } = await supabase.auth.getUser();
+  let libraryStatus = null;
+  if (user && work.id) {
+    const { data } = await supabase
+      .from('user_library')
+      .select('is_following, is_playing, is_finished')
+      .eq('user_id', user.id)
+      .eq('work_id', work.id)
+      .maybeSingle();
+    libraryStatus = data ?? null;
+  }
+
+  return <LibroClient work={work} userId={user?.id ?? null} libraryStatus={libraryStatus} />;
 }
