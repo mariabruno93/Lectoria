@@ -148,7 +148,7 @@ export default function PerfilClient({
               />
             </div>
             <span className="text-xs font-medium" style={{ color: profilePublic ? '#C9933A' : '#6A6460' }}>
-              {profilePublic ? '🌐 Público' : '🔒 Privado'}
+              {profilePublic ? '🌐 Perfil público' : '🔒 Perfil privado'}
             </span>
           </button>
         </div>
