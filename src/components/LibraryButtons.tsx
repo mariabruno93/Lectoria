@@ -54,13 +54,11 @@ export default function LibraryButtons({ workId, userId, initialStatus, onUpdate
         );
       if (error) throw error;
     } catch (err: any) {
-      // Revert on error + mostrar mensaje real
       setStatus(status);
       onUpdate?.(workId, status);
-      const msg = err?.message ?? err?.error_description ?? JSON.stringify(err);
-      console.error('LibraryButtons error:', msg, { workId, userId });
-      setErrorMsg(msg);
-      setTimeout(() => setErrorMsg(null), 6000);
+      console.error('LibraryButtons error:', err?.message, { workId, userId });
+      setErrorMsg('No se pudo guardar');
+      setTimeout(() => setErrorMsg(null), 3000);
     } finally {
       setLoadingField(null);
     }
