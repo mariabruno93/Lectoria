@@ -107,23 +107,50 @@ export default function PerfilClient({
       {/* ── Perfil ──────────────────────────────────────────────────── */}
       <form onSubmit={handleSave} className="flex flex-col gap-6">
         <div className="flex items-center gap-5">
-          <div className="relative w-20 h-20 flex-shrink-0">
-            <div className="w-20 h-20 rounded-full overflow-hidden flex items-center justify-center text-2xl font-bold"
-              style={{ background: '#C9933A33', color: '#C9933A', fontFamily: 'Georgia, serif' }}>
-              {avatarUrl
-                ? <img src={avatarUrl} alt="avatar" className="w-full h-full object-cover" />
-                : (name || user.email).charAt(0).toUpperCase()}
-            </div>
+          {/* Avatar */}
+          <div className="w-20 h-20 rounded-full overflow-hidden flex-shrink-0 flex items-center justify-center text-2xl font-bold"
+            style={{ background: '#C9933A33', color: '#C9933A', fontFamily: 'Georgia, serif' }}>
+            {avatarUrl
+              ? <img src={avatarUrl} alt="avatar" className="w-full h-full object-cover" />
+              : (name || user.email).charAt(0).toUpperCase()}
           </div>
-          <div className="flex flex-col gap-2">
+
+          {/* Cambiar foto + email */}
+          <div className="flex flex-col gap-2 flex-1">
             <button type="button" onClick={() => fileRef.current?.click()}
-              className="px-4 py-2 rounded-full text-sm transition-opacity hover:opacity-80"
+              className="px-4 py-2 rounded-full text-sm transition-opacity hover:opacity-80 w-fit"
               style={{ background: '#2A2720', color: '#F2EDE4' }}>
               {uploading ? 'Subiendo...' : 'Cambiar foto'}
             </button>
             <p className="text-xs" style={{ color: '#8A8478' }}>{user.email}</p>
             <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleAvatar} />
           </div>
+
+          {/* Toggle perfil público / privado */}
+          <button
+            type="button"
+            onClick={handleTogglePublic}
+            disabled={togglingPublic}
+            className="flex-shrink-0 flex flex-col items-center gap-2 px-4 py-3 rounded-2xl transition-colors hover:bg-white/[0.03]"
+            style={{ border: '1px solid #2A2720', minWidth: 110 }}
+          >
+            <div
+              className="relative w-11 h-6 rounded-full transition-all duration-200"
+              style={{ background: profilePublic ? '#C9933A' : '#2A2720' }}
+            >
+              <span
+                className="absolute top-0.5 w-5 h-5 rounded-full transition-all duration-200"
+                style={{
+                  background: '#fff',
+                  left: profilePublic ? '22px' : '2px',
+                  boxShadow: '0 1px 4px rgba(0,0,0,0.4)',
+                }}
+              />
+            </div>
+            <span className="text-xs font-medium" style={{ color: profilePublic ? '#C9933A' : '#6A6460' }}>
+              {profilePublic ? '🌐 Público' : '🔒 Privado'}
+            </span>
+          </button>
         </div>
 
         <div>
@@ -151,37 +178,6 @@ export default function PerfilClient({
             className={INPUT}
             style={{ ...INPUT_STYLE, resize: 'none', lineHeight: '1.6' }}
           />
-        </div>
-
-        {/* Toggle perfil público / privado */}
-        <div className="flex items-center justify-between px-4 py-3 rounded-xl"
-          style={{ background: '#1A1816', border: '1px solid #2A2720' }}>
-          <div>
-            <p className="text-sm font-medium" style={{ color: '#F2EDE4' }}>
-              {profilePublic ? '🌐 Perfil público' : '🔒 Perfil privado'}
-            </p>
-            <p className="text-xs mt-0.5" style={{ color: '#6A6460' }}>
-              {profilePublic
-                ? 'Tu perfil y obras son visibles para todos en Epovox'
-                : 'Solo vos podés ver tu perfil de autor'}
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={handleTogglePublic}
-            disabled={togglingPublic}
-            className="relative flex-shrink-0 w-12 h-6 rounded-full transition-all duration-200"
-            style={{ background: profilePublic ? '#C9933A' : '#2A2720' }}
-          >
-            <span
-              className="absolute top-0.5 w-5 h-5 rounded-full transition-all duration-200"
-              style={{
-                background: '#fff',
-                left: profilePublic ? '26px' : '2px',
-                boxShadow: '0 1px 4px rgba(0,0,0,0.4)',
-              }}
-            />
-          </button>
         </div>
 
         {msg && (
