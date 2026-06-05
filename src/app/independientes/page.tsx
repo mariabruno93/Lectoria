@@ -37,8 +37,8 @@ export default async function IndependientesPage() {
   });
   const authors = Array.from(authorMap.values());
 
-  // Solo obras gratuitas para el grid de obras recientes
-  const list = allPublished.filter(w => w.is_public);
+  // Todas las obras publicadas de autores con perfil público (gratuitas y de pago)
+  const list = allPublished;
 
   return (
     <div className="max-w-6xl mx-auto px-6 py-12">
