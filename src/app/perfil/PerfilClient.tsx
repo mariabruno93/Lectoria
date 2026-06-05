@@ -26,6 +26,8 @@ export default function PerfilClient({
   const [avatarUrl, setAvatarUrl] = useState(profile?.avatar_url ?? '');
   const [nationality, setNationality] = useState(profile?.nationality ?? '');
   const [bio, setBio] = useState(profile?.bio ?? '');
+  const [profilePublic, setProfilePublic] = useState<boolean>(profile?.profile_public ?? true);
+  const [togglingPublic, setTogglingPublic] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState('');
@@ -63,6 +65,17 @@ export default function PerfilClient({
     setMsg(error ? 'Error: ' + error.message : '¡Perfil actualizado!');
     setSaving(false);
     if (!error) router.refresh();
+  }
+
+  async function handleTogglePublic() {
+    setTogglingPublic(true);
+    const next = !profilePublic;
+    const { error } = await supabase
+      .from('profiles')
+      .update({ profile_public: next })
+      .eq('id', user.id);
+    if (!error) setProfilePublic(next);
+    setTogglingPublic(false);
   }
 
   async function handleLogout() {
@@ -138,6 +151,37 @@ export default function PerfilClient({
             className={INPUT}
             style={{ ...INPUT_STYLE, resize: 'none', lineHeight: '1.6' }}
           />
+        </div>
+
+        {/* Toggle perfil público / privado */}
+        <div className="flex items-center justify-between px-4 py-3 rounded-xl"
+          style={{ background: '#1A1816', border: '1px solid #2A2720' }}>
+          <div>
+            <p className="text-sm font-medium" style={{ color: '#F2EDE4' }}>
+              {profilePublic ? '🌐 Perfil público' : '🔒 Perfil privado'}
+            </p>
+            <p className="text-xs mt-0.5" style={{ color: '#6A6460' }}>
+              {profilePublic
+                ? 'Tu perfil y obras son visibles para todos en Epovox'
+                : 'Solo vos podés ver tu perfil de autor'}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={handleTogglePublic}
+            disabled={togglingPublic}
+            className="relative flex-shrink-0 w-12 h-6 rounded-full transition-all duration-200"
+            style={{ background: profilePublic ? '#C9933A' : '#2A2720' }}
+          >
+            <span
+              className="absolute top-0.5 w-5 h-5 rounded-full transition-all duration-200"
+              style={{
+                background: '#fff',
+                left: profilePublic ? '26px' : '2px',
+                boxShadow: '0 1px 4px rgba(0,0,0,0.4)',
+              }}
+            />
+          </button>
         </div>
 
         {msg && (

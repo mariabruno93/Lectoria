@@ -14,14 +14,15 @@ export default async function IndependientesPage() {
   // Obras públicas publicadas, con perfil del autor
   const { data: works } = await supabase
     .from('user_works')
-    .select('*, profiles(display_name, avatar_url)')
+    .select('*, profiles(display_name, avatar_url, profile_public)')
     .eq('status', 'published')
     .eq('is_public', true)
     .order('created_at', { ascending: false });
 
-  const list = works ?? [];
+  // Filtrar obras de autores con perfil privado
+  const list = (works ?? []).filter(w => (w.profiles as any)?.profile_public !== false);
 
-  // Autores únicos con obras publicadas
+  // Autores únicos con obras publicadas y perfil público
   const authorMap = new Map<string, { userId: string; name: string; avatar: string | null; count: number }>();
   list.forEach(w => {
     const uid = w.user_id;

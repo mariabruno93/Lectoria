@@ -21,11 +21,31 @@ export default async function AutorIndependientePage({ params }: { params: Promi
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('display_name, avatar_url, nationality, bio')
+    .select('display_name, avatar_url, nationality, bio, profile_public')
     .eq('id', userId)
     .single();
 
   if (!profile) notFound();
+
+  // Perfil privado — no mostrar contenido
+  if (profile.profile_public === false) {
+    return (
+      <div className="max-w-md mx-auto px-6 py-32 text-center">
+        <p className="text-4xl mb-5">🔒</p>
+        <h1 className="text-2xl font-bold mb-3" style={{ fontFamily: 'Georgia, serif', color: '#F2EDE4' }}>
+          Perfil privado
+        </h1>
+        <p className="text-sm mb-8" style={{ color: '#8A8478' }}>
+          Este autor eligió mantener su perfil privado por el momento.
+        </p>
+        <Link href="/independientes"
+          className="text-xs uppercase tracking-widest hover:opacity-70 transition-opacity"
+          style={{ color: '#C9933A' }}>
+          ← Ver otros autores
+        </Link>
+      </div>
+    );
+  }
 
   // Todas las obras publicadas (públicas y privadas/de pago)
   const { data: works } = await supabase
