@@ -11,20 +11,19 @@ export const metadata: Metadata = {
 export default async function IndependientesPage() {
   const supabase = await createClient();
 
-  // Obras públicas publicadas, con perfil del autor
+  // Todas las obras publicadas (públicas y privadas), con perfil del autor
   const { data: works } = await supabase
     .from('user_works')
     .select('*, profiles(display_name, avatar_url, profile_public)')
     .eq('status', 'published')
-    .eq('is_public', true)
     .order('created_at', { ascending: false });
 
-  // Filtrar obras de autores con perfil privado
-  const list = (works ?? []).filter(w => (w.profiles as any)?.profile_public !== false);
+  // Solo obras de autores con perfil público
+  const allPublished = (works ?? []).filter(w => (w.profiles as any)?.profile_public !== false);
 
-  // Autores únicos con obras publicadas y perfil público
+  // Autores únicos: aparecen si tienen al menos 1 obra publicada y perfil público
   const authorMap = new Map<string, { userId: string; name: string; avatar: string | null; count: number }>();
-  list.forEach(w => {
+  allPublished.forEach(w => {
     const uid = w.user_id;
     if (!authorMap.has(uid)) {
       authorMap.set(uid, {
@@ -37,6 +36,9 @@ export default async function IndependientesPage() {
     authorMap.get(uid)!.count++;
   });
   const authors = Array.from(authorMap.values());
+
+  // Solo obras gratuitas para el grid de obras recientes
+  const list = allPublished.filter(w => w.is_public);
 
   return (
     <div className="max-w-6xl mx-auto px-6 py-12">
@@ -54,7 +56,7 @@ export default async function IndependientesPage() {
         </p>
       </div>
 
-      {list.length === 0 ? (
+      {authors.length === 0 ? (
         <div className="py-24 text-center rounded-2xl" style={{ background: '#1A1816', border: '1px solid #2A2720' }}>
           <p className="text-4xl mb-4">✍️</p>
           <p className="text-lg font-semibold mb-2" style={{ fontFamily: 'Georgia, serif', color: '#F2EDE4' }}>
