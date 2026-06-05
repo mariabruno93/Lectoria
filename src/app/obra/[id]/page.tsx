@@ -16,12 +16,12 @@ export default async function ObraPage({ params }: { params: Promise<{ id: strin
   const { id } = await params;
   const supabase = await createClient();
 
+  // Carga la obra sin filtrar por is_public (las privadas muestran estado bloqueado)
   const { data: work } = await supabase
     .from('user_works')
-    .select('*, profiles(display_name, avatar_url)')
+    .select('*, profiles(display_name, avatar_url, nationality)')
     .eq('id', id)
     .eq('status', 'published')
-    .eq('is_public', true)
     .single();
 
   if (!work) notFound();
@@ -29,18 +29,26 @@ export default async function ObraPage({ params }: { params: Promise<{ id: strin
   const author = work.profiles as any;
   const authorName = author?.display_name ?? 'Autor';
   const authorAvatar = author?.avatar_url ?? null;
+  const isLocked = !work.is_public;
 
   return (
     <div className="max-w-2xl mx-auto px-6 py-14">
       {/* Breadcrumb */}
-      <Link href="/independientes"
+      <Link href={`/independientes/${work.user_id}`}
         className="text-xs uppercase tracking-widest hover:opacity-70 transition-opacity"
         style={{ color: '#C9933A' }}>
-        ← Autores independientes
+        ← {authorName}
       </Link>
 
       {/* Header */}
       <div className="mt-8 mb-10">
+        {isLocked && (
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium mb-4"
+            style={{ background: 'rgba(201,147,58,0.12)', border: '1px solid rgba(201,147,58,0.3)', color: '#C9933A' }}>
+            🔒 Obra de pago
+          </div>
+        )}
+
         <h1 className="text-4xl font-bold leading-tight mb-4"
           style={{ fontFamily: 'Georgia, serif', color: '#F2EDE4' }}>
           {work.title}
@@ -62,6 +70,7 @@ export default async function ObraPage({ params }: { params: Promise<{ id: strin
           <div>
             <p className="text-sm font-medium" style={{ color: '#F2EDE4' }}>{authorName}</p>
             <p className="text-xs" style={{ color: '#6A6460' }}>
+              {author?.nationality ? `${author.nationality} · ` : ''}
               {new Date(work.created_at).toLocaleDateString('es-AR', { day: 'numeric', month: 'long', year: 'numeric' })}
               {' · '}{work.language.toUpperCase()}
             </p>
@@ -73,31 +82,58 @@ export default async function ObraPage({ params }: { params: Promise<{ id: strin
         )}
       </div>
 
-      {/* Player de audio */}
-      {work.audio_url && (
-        <ObraPlayer
-          workId={work.id}
-          title={work.title}
-          audioUrl={work.audio_url}
-          authorName={authorName}
-        />
-      )}
-
-      {/* Texto */}
-      {work.content && (
-        <div className="mt-10 pt-8" style={{ borderTop: '1px solid #2A2720' }}>
-          <div
-            className="prose prose-invert max-w-none leading-8 text-base whitespace-pre-wrap"
-            style={{
-              color: '#C9C3B8',
-              fontFamily: 'Georgia, serif',
-              lineHeight: 1.9,
-              fontSize: '1.05rem',
-            }}
-          >
-            {work.content}
+      {/* ── Obra de pago — estado bloqueado ── */}
+      {isLocked ? (
+        <div className="rounded-2xl p-8 text-center"
+          style={{ background: '#1A1816', border: '1px solid #2A2720' }}>
+          <div className="text-4xl mb-4">🔒</div>
+          <h2 className="text-xl font-bold mb-2" style={{ fontFamily: 'Georgia, serif', color: '#F2EDE4' }}>
+            Esta obra es de pago
+          </h2>
+          <p className="text-sm mb-6 max-w-xs mx-auto" style={{ color: '#8A8478' }}>
+            El autor ha elegido compartir este contenido con sus lectores más cercanos.
+            Próximamente podrás comprarlo directamente en Epovox.
+          </p>
+          <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold"
+            style={{ background: '#2A2720', color: '#6A6460', cursor: 'not-allowed' }}>
+            Próximamente disponible
           </div>
+          <p className="mt-5 text-xs" style={{ color: '#3A3728' }}>
+            ¿Ya compraste esta obra?{' '}
+            <Link href="/login" className="hover:opacity-80" style={{ color: '#C9933A' }}>
+              Iniciá sesión
+            </Link>
+          </p>
         </div>
+      ) : (
+        <>
+          {/* Player de audio */}
+          {work.audio_url && (
+            <ObraPlayer
+              workId={work.id}
+              title={work.title}
+              audioUrl={work.audio_url}
+              authorName={authorName}
+            />
+          )}
+
+          {/* Texto */}
+          {work.content && (
+            <div className="mt-10 pt-8" style={{ borderTop: '1px solid #2A2720' }}>
+              <div
+                className="prose prose-invert max-w-none leading-8 text-base whitespace-pre-wrap"
+                style={{
+                  color: '#C9C3B8',
+                  fontFamily: 'Georgia, serif',
+                  lineHeight: 1.9,
+                  fontSize: '1.05rem',
+                }}
+              >
+                {work.content}
+              </div>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

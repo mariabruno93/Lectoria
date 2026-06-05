@@ -7,11 +7,13 @@ type UserWork = {
   language: string;
   user_id: string;
   created_at: string;
+  is_public?: boolean;
   // profile joined
   profiles?: { display_name: string | null; avatar_url: string | null } | null;
 };
 
 export default function UserWorkCard({ work }: { work: UserWork }) {
+  const isLocked = work.is_public === false;
   const authorName = work.profiles?.display_name ?? 'Autor';
   const authorAvatar = work.profiles?.avatar_url;
 
@@ -30,12 +32,18 @@ export default function UserWorkCard({ work }: { work: UserWork }) {
           boxShadow: '0 4px 24px rgba(0,0,0,0.5)',
         }}
       >
-        {/* Badge idioma */}
-        <div className="absolute top-3 left-3">
+        {/* Badge idioma + candado */}
+        <div className="absolute top-3 left-3 flex gap-1.5">
           <span className="text-xs px-2 py-0.5 rounded-full font-medium tracking-widest"
             style={{ background: 'rgba(0,0,0,0.45)', color: 'rgba(255,255,255,0.75)' }}>
             {work.language.toUpperCase()}
           </span>
+          {isLocked && (
+            <span className="text-xs px-2 py-0.5 rounded-full font-medium flex items-center gap-1"
+              style={{ background: 'rgba(201,147,58,0.85)', color: '#fff' }}>
+              🔒 De pago
+            </span>
+          )}
         </div>
 
         {/* Título overlay */}
@@ -50,8 +58,8 @@ export default function UserWorkCard({ work }: { work: UserWork }) {
         <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
           style={{ background: 'rgba(0,0,0,0.35)' }}>
           <div className="px-4 py-2 rounded-full text-sm font-medium"
-            style={{ background: '#C9933A', color: '#fff' }}>
-            Ver obra
+            style={{ background: isLocked ? '#1A1816' : '#C9933A', color: '#fff', border: isLocked ? '1px solid #C9933A' : 'none' }}>
+            {isLocked ? '🔒 Ver detalles' : 'Ver obra'}
           </div>
         </div>
       </div>

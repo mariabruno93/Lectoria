@@ -7,9 +7,12 @@ import UserWorkCard from '@/components/UserWorkCard';
 export async function generateMetadata({ params }: { params: Promise<{ userId: string }> }): Promise<Metadata> {
   const { userId } = await params;
   const supabase = await createClient();
-  const { data: profile } = await supabase.from('profiles').select('display_name').eq('id', userId).single();
+  const { data: profile } = await supabase.from('profiles').select('display_name, bio').eq('id', userId).single();
   const name = profile?.display_name ?? 'Autor independiente';
-  return { title: `${name} — Epovox`, description: `Obras publicadas por ${name} en Epovox.` };
+  return {
+    title: `${name} — Epovox`,
+    description: profile?.bio ?? `Obras publicadas por ${name} en Epovox.`,
+  };
 }
 
 export default async function AutorIndependientePage({ params }: { params: Promise<{ userId: string }> }) {
@@ -18,24 +21,26 @@ export default async function AutorIndependientePage({ params }: { params: Promi
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('display_name, avatar_url')
+    .select('display_name, avatar_url, nationality, bio')
     .eq('id', userId)
     .single();
 
   if (!profile) notFound();
 
+  // Todas las obras publicadas (públicas y privadas/de pago)
   const { data: works } = await supabase
     .from('user_works')
     .select('*')
     .eq('user_id', userId)
     .eq('status', 'published')
-    .eq('is_public', true)
     .order('created_at', { ascending: false });
 
   if (!works || works.length === 0) notFound();
 
   const name   = profile.display_name ?? 'Autor';
   const avatar = profile.avatar_url;
+  const publicWorks  = works.filter(w => w.is_public);
+  const privateWorks = works.filter(w => !w.is_public);
 
   return (
     <div>
@@ -57,19 +62,33 @@ export default async function AutorIndependientePage({ params }: { params: Promi
 
           <div className="flex-1 text-center sm:text-left pb-2">
             <p className="text-xs uppercase tracking-widest mb-2" style={{ color: '#C9933A' }}>
-              Autor independiente
+              Autor independiente{profile.nationality ? ` · ${profile.nationality}` : ''}
             </p>
-            <h1 className="text-4xl md:text-5xl font-bold mb-6"
+            <h1 className="text-4xl md:text-5xl font-bold mb-3"
               style={{ fontFamily: 'Georgia, serif', color: '#F2EDE4' }}>
               {name}
             </h1>
-            <div className="flex gap-5 justify-center sm:justify-start">
+            {profile.bio && (
+              <p className="text-base italic mb-5 max-w-lg"
+                style={{ color: '#8A8478', fontFamily: 'Georgia, serif' }}>
+                "{profile.bio}"
+              </p>
+            )}
+            <div className="flex gap-6 justify-center sm:justify-start">
               <span className="text-center">
                 <p className="text-xl font-bold" style={{ fontFamily: 'Georgia, serif', color: '#F2EDE4' }}>
-                  {works.length}
+                  {publicWorks.length}
                 </p>
-                <p className="text-xs" style={{ color: '#6A6460' }}>obras</p>
+                <p className="text-xs" style={{ color: '#6A6460' }}>gratuitas</p>
               </span>
+              {privateWorks.length > 0 && (
+                <span className="text-center">
+                  <p className="text-xl font-bold" style={{ fontFamily: 'Georgia, serif', color: '#C9933A' }}>
+                    {privateWorks.length}
+                  </p>
+                  <p className="text-xs" style={{ color: '#6A6460' }}>de pago</p>
+                </span>
+              )}
             </div>
           </div>
         </div>
@@ -83,15 +102,39 @@ export default async function AutorIndependientePage({ params }: { params: Promi
           ← Autores independientes
         </Link>
 
-        <h2 className="text-xs font-semibold uppercase tracking-widest mb-5" style={{ color: '#C9933A' }}>
-          Obras · {works.length}
-        </h2>
+        {/* Obras gratuitas */}
+        {publicWorks.length > 0 && (
+          <div className="mb-10">
+            <h2 className="text-xs font-semibold uppercase tracking-widest mb-5" style={{ color: '#C9933A' }}>
+              Obras gratuitas · {publicWorks.length}
+            </h2>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-5">
+              {publicWorks.map(work => (
+                <UserWorkCard
+                  key={work.id}
+                  work={{ ...work, profiles: profile, user_id: userId } as any}
+                />
+              ))}
+            </div>
+          </div>
+        )}
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-5">
-          {works.map(work => (
-            <UserWorkCard key={work.id} work={{ ...work, profiles: profile, user_id: userId } as any} />
-          ))}
-        </div>
+        {/* Obras de pago */}
+        {privateWorks.length > 0 && (
+          <div>
+            <h2 className="text-xs font-semibold uppercase tracking-widest mb-5" style={{ color: '#C9933A' }}>
+              Obras de pago · {privateWorks.length}
+            </h2>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-5">
+              {privateWorks.map(work => (
+                <UserWorkCard
+                  key={work.id}
+                  work={{ ...work, is_public: false, profiles: profile, user_id: userId } as any}
+                />
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

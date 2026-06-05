@@ -38,6 +38,8 @@ export default function ObrasClient({ works: initialWorks }: { works: Work[] }) 
   const [loadingId, setLoadingId] = useState<string | null>(null);
 
   const visible = filter === 'all' ? works : works.filter(w => w.status === filter);
+  const publishedPublic = works.filter(w => w.status === 'published' && w.is_public).length;
+  const showTip = works.length > 0 && publishedPublic < 2;
 
   async function togglePublic(work: Work) {
     setLoadingId(work.id);
@@ -83,6 +85,24 @@ export default function ObrasClient({ works: initialWorks }: { works: Work[] }) 
           <span style={{ fontSize: 18, lineHeight: 1 }}>+</span> Nueva obra
         </Link>
       </div>
+
+      {/* Tip: recomendación de obras públicas */}
+      {showTip && (
+        <div className="mb-6 px-5 py-4 rounded-2xl flex gap-3 items-start"
+          style={{ background: 'rgba(201,147,58,0.07)', border: '1px solid rgba(201,147,58,0.2)' }}>
+          <span className="text-xl flex-shrink-0 mt-0.5">💡</span>
+          <div>
+            <p className="text-sm font-medium mb-0.5" style={{ color: '#F2EDE4' }}>
+              Consejo para atraer lectores
+            </p>
+            <p className="text-xs leading-5" style={{ color: '#8A8478' }}>
+              Publicar al menos <strong style={{ color: '#C9933A' }}>2 obras cortas gratuitas</strong> genera
+              confianza y atrae a lectores que luego comprarán tus obras de pago.
+              Tenés {publishedPublic === 0 ? 'ninguna' : `${publishedPublic}`} pública{publishedPublic === 1 ? '' : 's'} publicada{publishedPublic === 1 ? '' : 's'} — te {publishedPublic === 0 ? 'faltan 2' : 'falta 1'} para completar el mínimo recomendado.
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Filtros */}
       <div className="flex gap-2 mb-6 flex-wrap">

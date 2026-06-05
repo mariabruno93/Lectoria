@@ -24,6 +24,8 @@ export default function PerfilClient({
 
   const [name, setName] = useState(profile?.display_name ?? '');
   const [avatarUrl, setAvatarUrl] = useState(profile?.avatar_url ?? '');
+  const [nationality, setNationality] = useState(profile?.nationality ?? '');
+  const [bio, setBio] = useState(profile?.bio ?? '');
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState('');
@@ -56,7 +58,7 @@ export default function PerfilClient({
     setSaving(true);
     const { error } = await supabase
       .from('profiles')
-      .update({ display_name: name, avatar_url: avatarUrl })
+      .update({ display_name: name, avatar_url: avatarUrl, nationality: nationality.trim() || null, bio: bio.trim() || null })
       .eq('id', user.id);
     setMsg(error ? 'Error: ' + error.message : '¡Perfil actualizado!');
     setSaving(false);
@@ -115,6 +117,27 @@ export default function PerfilClient({
           <label className="block text-xs mb-1.5" style={{ color: '#8A8478' }}>Nombre</label>
           <input value={name} onChange={e => setName(e.target.value)}
             placeholder="Tu nombre" className={INPUT} style={INPUT_STYLE} />
+        </div>
+
+        <div>
+          <label className="block text-xs mb-1.5" style={{ color: '#8A8478' }}>Nacionalidad</label>
+          <input value={nationality} onChange={e => setNationality(e.target.value)}
+            placeholder="Ej: Argentina, México, España…" className={INPUT} style={INPUT_STYLE} />
+        </div>
+
+        <div>
+          <label className="flex justify-between text-xs mb-1.5" style={{ color: '#8A8478' }}>
+            <span>Frase o bio</span>
+            <span style={{ color: bio.length > 140 ? '#ef4444' : '#6A6460' }}>{bio.length}/160</span>
+          </label>
+          <textarea
+            value={bio}
+            onChange={e => { if (e.target.value.length <= 160) setBio(e.target.value); }}
+            placeholder="Una frase que te describe como escritor/a…"
+            rows={2}
+            className={INPUT}
+            style={{ ...INPUT_STYLE, resize: 'none', lineHeight: '1.6' }}
+          />
         </div>
 
         {msg && (
