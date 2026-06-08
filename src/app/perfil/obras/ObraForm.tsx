@@ -13,6 +13,7 @@ type WorkData = {
   is_public: boolean;
   status: 'draft' | 'published' | 'archived';
   audio_url?: string | null;
+  cover_url?: string | null;
 };
 
 const INPUT  = 'w-full px-4 py-3 rounded-xl text-sm outline-none';
@@ -24,7 +25,7 @@ export default function ObraForm({ userId, initial }: { userId: string; initial?
   const isNew = !initial?.id;
 
   const [form, setForm] = useState<WorkData>(initial ?? {
-    title: '', description: '', content: '', language: 'es', is_public: false, status: 'draft', audio_url: null,
+    title: '', description: '', content: '', language: 'es', is_public: false, status: 'draft', audio_url: null, cover_url: null,
   });
   const [loading, setLoading]     = useState(false);
   const [deleting, setDeleting]   = useState(false);
@@ -34,6 +35,10 @@ export default function ObraForm({ userId, initial }: { userId: string; initial?
   const [generating, setGenerating] = useState(false);
   const [uploading, setUploading]   = useState(false);
   const audioFileRef = useRef<HTMLInputElement>(null);
+  const [coverTab, setCoverTab]       = useState<'upload' | 'generate'>('generate');
+  const [generatingCover, setGeneratingCover] = useState(false);
+  const [uploadingCover, setUploadingCover]   = useState(false);
+  const coverFileRef = useRef<HTMLInputElement>(null);
 
   const set = (k: keyof WorkData, v: any) => setForm(f => ({ ...f, [k]: v }));
 
@@ -98,6 +103,46 @@ export default function ObraForm({ userId, initial }: { userId: string; initial?
       setMsg('Error al subir: ' + (data.error ?? 'sin respuesta'));
     }
     setUploading(false);
+    e.target.value = '';
+  }
+
+  async function handleGenerateCover() {
+    if (!form.id) { setMsg('Guardá la obra primero antes de generar la portada.'); return; }
+    setGeneratingCover(true); setMsg('');
+    const res = await fetch('/api/user/generate-cover', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ workId: form.id }),
+    });
+    const data = await res.json();
+    if (data.url) {
+      set('cover_url', data.url);
+      setMsg('Portada generada correctamente ✓');
+    } else {
+      setMsg('Error: ' + (data.error ?? 'No se pudo generar la portada'));
+    }
+    setGeneratingCover(false);
+  }
+
+  async function handleUploadCover(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file || !form.id) return;
+    setUploadingCover(true); setMsg('');
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('bucket', 'covers');
+    formData.append('path', `user-works/${form.id}.jpg`);
+    const res = await fetch('/api/admin/upload', { method: 'POST', body: formData });
+    const data = await res.json();
+    if (data.url) {
+      const url = `${data.url}?v=${Date.now()}`;
+      set('cover_url', url);
+      await supabase.from('user_works').update({ cover_url: url }).eq('id', form.id);
+      setMsg('Portada subida correctamente ✓');
+    } else {
+      setMsg('Error al subir: ' + (data.error ?? 'sin respuesta'));
+    }
+    setUploadingCover(false);
     e.target.value = '';
   }
 
@@ -175,6 +220,81 @@ export default function ObraForm({ userId, initial }: { userId: string; initial?
               {form.content.trim().split(/\s+/).filter(Boolean).length} palabras
             </p>
           )}
+        </div>
+
+        {/* ── Portada ────────────────────────────────────────────────── */}
+        <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid #2A2720' }}>
+          <div className="px-4 pt-4 pb-3" style={{ background: '#111' }}>
+            <p className="text-sm font-medium mb-1" style={{ color: '#F2EDE4' }}>Portada</p>
+            <p className="text-xs" style={{ color: '#6A6460' }}>
+              Generá la portada con IA o subí tu propia imagen.
+            </p>
+          </div>
+
+          <div className="p-4 flex gap-4" style={{ background: '#0D0C0B' }}>
+            {/* Preview */}
+            <div className="w-24 flex-shrink-0">
+              <div className="aspect-[2/3] rounded-lg overflow-hidden flex items-center justify-center"
+                style={{ background: '#1A1816', border: '1px solid #2A2720' }}>
+                {form.cover_url
+                  ? <img src={form.cover_url} alt="Portada" className="w-full h-full object-cover" />
+                  : <span className="text-2xl" style={{ opacity: 0.4 }}>🖼</span>}
+              </div>
+            </div>
+
+            {/* Controles */}
+            <div className="flex-1 flex flex-col gap-3">
+              <div className="flex gap-2">
+                {[
+                  { id: 'generate', label: '✨ Generar con IA' },
+                  { id: 'upload',   label: '🖼 Subir imagen' },
+                ].map(t => (
+                  <button key={t.id} type="button"
+                    onClick={() => setCoverTab(t.id as any)}
+                    className="px-3 py-1.5 rounded-full text-xs font-medium transition-colors"
+                    style={{
+                      background: coverTab === t.id ? '#C9933A22' : '#1A1816',
+                      border: `1px solid ${coverTab === t.id ? '#C9933A' : '#2A2720'}`,
+                      color: coverTab === t.id ? '#C9933A' : '#6A6460',
+                    }}>
+                    {t.label}
+                  </button>
+                ))}
+              </div>
+
+              {!form.id && (
+                <p className="text-xs" style={{ color: '#6A6460' }}>
+                  Guardá la obra primero para poder {coverTab === 'generate' ? 'generar' : 'subir'} la portada.
+                </p>
+              )}
+
+              {coverTab === 'generate' ? (
+                <>
+                  <p className="text-xs" style={{ color: '#8A8478' }}>
+                    Se crea a partir del título y la descripción de tu obra.
+                  </p>
+                  <button type="button" onClick={handleGenerateCover}
+                    disabled={generatingCover || !form.id}
+                    className="py-2.5 rounded-full text-sm font-semibold transition-opacity hover:opacity-80 disabled:opacity-40"
+                    style={{ background: '#C9933A', color: '#fff' }}>
+                    {generatingCover ? 'Generando portada… puede tardar unos segundos' : form.cover_url ? 'Regenerar portada' : 'Generar portada'}
+                  </button>
+                </>
+              ) : (
+                <>
+                  <p className="text-xs" style={{ color: '#8A8478' }}>Subí una imagen (JPG o PNG).</p>
+                  <button type="button"
+                    disabled={!form.id || uploadingCover}
+                    onClick={() => coverFileRef.current?.click()}
+                    className="py-2.5 rounded-full text-sm font-semibold transition-opacity hover:opacity-80 disabled:opacity-40"
+                    style={{ background: '#2A2720', color: '#F2EDE4' }}>
+                    {uploadingCover ? 'Subiendo…' : form.cover_url ? 'Reemplazar imagen' : 'Elegir imagen'}
+                  </button>
+                  <input ref={coverFileRef} type="file" accept="image/*" className="hidden" onChange={handleUploadCover} />
+                </>
+              )}
+            </div>
+          </div>
         </div>
 
         {/* ── Audio ──────────────────────────────────────────────────── */}

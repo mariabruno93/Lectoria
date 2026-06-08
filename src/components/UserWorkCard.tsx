@@ -8,6 +8,7 @@ type UserWork = {
   user_id: string;
   created_at: string;
   is_public?: boolean;
+  cover_url?: string | null;
   // profile joined
   profiles?: { display_name: string | null; avatar_url: string | null } | null;
 };
@@ -32,6 +33,12 @@ export default function UserWorkCard({ work }: { work: UserWork }) {
           boxShadow: '0 4px 24px rgba(0,0,0,0.5)',
         }}
       >
+        {/* Portada (si existe) */}
+        {work.cover_url && (
+          <img src={work.cover_url} alt={work.title}
+            className="absolute inset-0 w-full h-full object-cover" />
+        )}
+
         {/* Badge idioma + candado */}
         <div className="absolute top-3 left-3 flex gap-1.5">
           <span className="text-xs px-2 py-0.5 rounded-full font-medium tracking-widest"

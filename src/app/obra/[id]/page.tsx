@@ -47,6 +47,13 @@ export default async function ObraPage({ params }: { params: Promise<{ id: strin
 
       {/* Header */}
       <div className="mt-8 mb-10">
+        {work.cover_url && (
+          <div className="w-40 aspect-[2/3] rounded-xl overflow-hidden mb-6"
+            style={{ boxShadow: '0 6px 30px rgba(0,0,0,0.5)' }}>
+            <img src={work.cover_url} alt={work.title} className="w-full h-full object-cover" />
+          </div>
+        )}
+
         {isLocked && (
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium mb-4"
             style={{ background: 'rgba(201,147,58,0.12)', border: '1px solid rgba(201,147,58,0.3)', color: '#C9933A' }}>
