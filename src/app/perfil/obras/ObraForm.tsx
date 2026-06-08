@@ -276,12 +276,12 @@ export default function ObraForm({ userId, initial }: { userId: string; initial?
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium" style={{ color: '#F2EDE4' }}>
-                {form.is_public ? '🌐 Pública' : '🔒 Privada'}
+                {form.is_public ? 'Gratis' : '🔒 De pago'}
               </p>
               <p className="text-xs mt-0.5" style={{ color: '#6A6460' }}>
                 {form.is_public
-                  ? 'Visible para todos los usuarios de Epovox.'
-                  : 'Solo vos podés verla. Ideal para borradores.'}
+                  ? 'Cualquiera puede leerla y escucharla sin pagar.'
+                  : 'Los lectores deberán comprarla para acceder.'}
               </p>
             </div>
             <button
@@ -320,7 +320,7 @@ export default function ObraForm({ userId, initial }: { userId: string; initial?
             onClick={e => handleSave(e as any, true)}
             className="flex-1 py-3 rounded-full font-semibold transition-opacity hover:opacity-80"
             style={{ background: '#C9933A', color: '#fff' }}>
-            {loading ? '...' : 'Publicar'}
+            {loading ? '...' : 'Compartir'}
           </button>
         </div>
 

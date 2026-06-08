@@ -19,14 +19,19 @@ export default async function ObraPage({ params }: { params: Promise<{ id: strin
   // Carga la obra sin filtrar por is_public (las privadas muestran estado bloqueado)
   const { data: work } = await supabase
     .from('user_works')
-    .select('*, profiles(display_name, avatar_url, nationality)')
+    .select('*')
     .eq('id', id)
     .eq('status', 'published')
     .single();
 
   if (!work) notFound();
 
-  const author = work.profiles as any;
+  // Perfil del autor (consulta aparte: no hay relación declarada en la DB)
+  const { data: author } = await supabase
+    .from('profiles')
+    .select('display_name, avatar_url, nationality')
+    .eq('id', work.user_id)
+    .single();
   const authorName = author?.display_name ?? 'Autor';
   const authorAvatar = author?.avatar_url ?? null;
   const isLocked = !work.is_public;

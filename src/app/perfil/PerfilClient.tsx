@@ -205,7 +205,7 @@ export default function PerfilClient({
             <span style={{ fontSize: 20 }}>✍️</span>
             <div>
               <p className="text-sm font-medium" style={{ color: '#F2EDE4' }}>Mis obras</p>
-              <p className="text-xs" style={{ color: '#8A8478' }}>Publicá y gestioná tus propias obras</p>
+              <p className="text-xs" style={{ color: '#8A8478' }}>Compartí y gestioná tus propias obras</p>
             </div>
           </div>
           <span style={{ color: '#C9933A' }}>→</span>

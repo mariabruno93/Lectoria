@@ -11,12 +11,23 @@ export const metadata: Metadata = {
 export default async function IndependientesPage() {
   const supabase = await createClient();
 
-  // Todas las obras publicadas (públicas y privadas), con perfil del autor
+  // Todas las obras publicadas (públicas y privadas)
   const { data: works } = await supabase
     .from('user_works')
-    .select('*, profiles(display_name, avatar_url, profile_public)')
+    .select('*')
     .eq('status', 'published')
     .order('created_at', { ascending: false });
+
+  // Perfiles de los autores (consulta aparte: no hay relación declarada en la DB)
+  const userIds = [...new Set((works ?? []).map(w => w.user_id))];
+  const { data: profs } = userIds.length
+    ? await supabase
+        .from('profiles')
+        .select('id, display_name, avatar_url, profile_public')
+        .in('id', userIds)
+    : { data: [] };
+  const profById = new Map((profs ?? []).map(p => [p.id, p]));
+  (works ?? []).forEach(w => { (w as any).profiles = profById.get(w.user_id) ?? null; });
 
   // Solo obras de autores con perfil público
   const allPublished = (works ?? []).filter(w => (w.profiles as any)?.profile_public !== false);
@@ -52,7 +63,7 @@ export default async function IndependientesPage() {
           Autores independientes
         </h1>
         <p className="mt-2 text-sm" style={{ color: '#8A8478' }}>
-          Obras originales publicadas por la comunidad de Epovox.
+          Obras originales compartidas por la comunidad de Epovox.
         </p>
       </div>
 
@@ -60,7 +71,7 @@ export default async function IndependientesPage() {
         <div className="py-24 text-center rounded-2xl" style={{ background: '#1A1816', border: '1px solid #2A2720' }}>
           <p className="text-4xl mb-4">✍️</p>
           <p className="text-lg font-semibold mb-2" style={{ fontFamily: 'Georgia, serif', color: '#F2EDE4' }}>
-            Aún no hay obras publicadas
+            Aún no hay obras compartidas
           </p>
           <p className="text-sm mb-6" style={{ color: '#8A8478' }}>
             Sé el primero en compartir tu escritura con la comunidad.
@@ -68,7 +79,7 @@ export default async function IndependientesPage() {
           <Link href="/perfil/obras/nueva"
             className="inline-block px-6 py-3 rounded-full text-sm font-semibold transition-opacity hover:opacity-80"
             style={{ background: '#C9933A', color: '#fff' }}>
-            Publicar una obra
+            Compartir una obra
           </Link>
         </div>
       ) : (

@@ -19,7 +19,7 @@ type Work = {
 
 const STATUS_LABEL: Record<Status, string> = {
   draft:     'Borrador',
-  published: 'Publicada',
+  published: 'Compartida',
   archived:  'Archivada',
 };
 const STATUS_COLOR: Record<Status, { bg: string; color: string }> = {
@@ -63,7 +63,7 @@ export default function ObrasClient({ works: initialWorks }: { works: Work[] }) 
 
   const FILTERS: { id: Filter; label: string }[] = [
     { id: 'all',       label: `Todas (${works.length})` },
-    { id: 'published', label: `Publicadas (${works.filter(w => w.status === 'published').length})` },
+    { id: 'published', label: `Compartidas (${works.filter(w => w.status === 'published').length})` },
     { id: 'draft',     label: `Borradores (${works.filter(w => w.status === 'draft').length})` },
     { id: 'archived',  label: `Archivadas (${works.filter(w => w.status === 'archived').length})` },
   ];
@@ -96,9 +96,9 @@ export default function ObrasClient({ works: initialWorks }: { works: Work[] }) 
               Consejo para atraer lectores
             </p>
             <p className="text-xs leading-5" style={{ color: '#8A8478' }}>
-              Publicar al menos <strong style={{ color: '#C9933A' }}>2 obras cortas gratuitas</strong> genera
+              Compartir al menos <strong style={{ color: '#C9933A' }}>2 obras cortas gratuitas</strong> genera
               confianza y atrae a lectores que luego comprarán tus obras de pago.
-              Tenés {publishedPublic === 0 ? 'ninguna' : `${publishedPublic}`} pública{publishedPublic === 1 ? '' : 's'} publicada{publishedPublic === 1 ? '' : 's'} — te {publishedPublic === 0 ? 'faltan 2' : 'falta 1'} para completar el mínimo recomendado.
+              Tenés {publishedPublic === 0 ? 'ninguna' : `${publishedPublic}`} obra{publishedPublic === 1 ? '' : 's'} gratuita{publishedPublic === 1 ? '' : 's'} compartida{publishedPublic === 1 ? '' : 's'} — te {publishedPublic === 0 ? 'faltan 2' : 'falta 1'} para completar el mínimo recomendado.
             </p>
           </div>
         </div>
@@ -126,7 +126,7 @@ export default function ObrasClient({ works: initialWorks }: { works: Work[] }) 
           <p className="text-3xl mb-4">✍️</p>
           <p className="text-sm mb-6" style={{ color: '#8A8478' }}>
             {filter === 'all'
-              ? 'Todavía no publicaste ninguna obra.'
+              ? 'Todavía no compartiste ninguna obra.'
               : `No tenés obras en "${STATUS_LABEL[filter as Status]}".`}
           </p>
           {filter === 'all' && (
@@ -157,7 +157,7 @@ export default function ObrasClient({ works: initialWorks }: { works: Work[] }) 
                       {/* Visibilidad */}
                       <span className="text-xs px-2 py-0.5 rounded-full"
                         style={{ background: '#2A2720', color: work.is_public ? '#C9933A' : '#6A6460' }}>
-                        {work.is_public ? '🌐 Pública' : '🔒 Privada'}
+                        {work.is_public ? 'Gratis' : '🔒 De pago'}
                       </span>
                       <span className="text-xs uppercase" style={{ color: '#6A6460' }}>
                         {work.language}
@@ -188,7 +188,7 @@ export default function ObrasClient({ works: initialWorks }: { works: Work[] }) 
                       onClick={() => togglePublic(work)}
                       className="px-4 py-1.5 rounded-full text-xs font-medium transition-opacity hover:opacity-80"
                       style={{ background: '#2A2720', color: work.is_public ? '#6A6460' : '#C9933A' }}>
-                      {work.is_public ? 'Hacer privada' : 'Hacer pública'}
+                      {work.is_public ? 'Hacer de pago' : 'Hacer gratis'}
                     </button>
                   </div>
                 </div>
@@ -199,7 +199,7 @@ export default function ObrasClient({ works: initialWorks }: { works: Work[] }) 
                     <button disabled={isLoading} onClick={() => setStatus(work, 'published')}
                       className="px-3 py-1 rounded-full text-xs transition-opacity hover:opacity-80"
                       style={{ background: '#0A2D1A', color: '#22c55e', border: '1px solid #22c55e33' }}>
-                      Publicar
+                      Compartir
                     </button>
                   )}
                   {work.status !== 'draft' && (
