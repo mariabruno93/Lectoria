@@ -50,7 +50,12 @@ const pending = STORIES
   .filter(s => !s.skipIfExists)
   .filter(s => !(workBySlug[s.slug] && haveChapter.has(workBySlug[s.slug])));
 
-console.log(`Cola: ${pending.length} cuento(s) pendiente(s).`);
+// Prioridad: autoras mujeres primero (sort estable → conserva el orden interno)
+const esMujer = slug => authorMeta[slug]?.gender === 'F';
+pending.sort((a, b) => (esMujer(a.authorSlug) ? 0 : 1) - (esMujer(b.authorSlug) ? 0 : 1));
+
+const mujeresPend = pending.filter(s => esMujer(s.authorSlug)).length;
+console.log(`Cola: ${pending.length} pendiente(s) · ${mujeresPend} de autoras mujeres (primero).`);
 
 if (pending.length === 0) {
   console.log('✓ Cola vacía — no hay cuentos nuevos para cargar.');
@@ -68,6 +73,7 @@ if (a) {
   await supabase.from('authors').upsert({
     slug: a.slug, name: a.name, nationality: a.nationality,
     born_year: a.born_year, died_year: a.died_year, bio: a.bio,
+    ...(a.photo ? { photo_url: a.photo } : {}),
   }, { onConflict: 'slug' });
 }
 const { data: authorRow } = await supabase.from('authors').select('id').eq('slug', story.authorSlug).maybeSingle();
