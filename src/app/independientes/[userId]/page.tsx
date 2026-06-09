@@ -1,12 +1,14 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/server';
 import { notFound } from 'next/navigation';
 import UserWorkCard from '@/components/UserWorkCard';
 
+export const dynamic = 'force-dynamic';
+
 export async function generateMetadata({ params }: { params: Promise<{ userId: string }> }): Promise<Metadata> {
   const { userId } = await params;
-  const supabase = await createClient();
+  const supabase = createAdminClient();
   const { data: profile } = await supabase.from('profiles').select('display_name, bio').eq('id', userId).single();
   const name = profile?.display_name ?? 'Autor independiente';
   return {
@@ -17,7 +19,8 @@ export async function generateMetadata({ params }: { params: Promise<{ userId: s
 
 export default async function AutorIndependientePage({ params }: { params: Promise<{ userId: string }> }) {
   const { userId } = await params;
-  const supabase = await createClient();
+  // Lectura pública del lado del servidor (clave admin, nunca llega al navegador).
+  const supabase = createAdminClient();
 
   const { data: profile } = await supabase
     .from('profiles')
@@ -47,10 +50,10 @@ export default async function AutorIndependientePage({ params }: { params: Promi
     );
   }
 
-  // Todas las obras publicadas (públicas y privadas/de pago)
+  // Todas las obras publicadas (públicas y de pago) — sin el texto de la obra
   const { data: works } = await supabase
     .from('user_works')
-    .select('*')
+    .select('id, title, description, language, is_public, cover_url, price_ars, created_at, user_id')
     .eq('user_id', userId)
     .eq('status', 'published')
     .order('created_at', { ascending: false });

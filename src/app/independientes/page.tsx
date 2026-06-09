@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/server';
 import UserWorkCard from '@/components/UserWorkCard';
 
 export const metadata: Metadata = {
@@ -8,13 +8,18 @@ export const metadata: Metadata = {
   description: 'Obras publicadas por autores independientes en Epovox.',
 };
 
-export default async function IndependientesPage() {
-  const supabase = await createClient();
+export const dynamic = 'force-dynamic';
 
-  // Todas las obras publicadas (públicas y privadas)
+// Lectura pública: se usa el cliente admin del lado del servidor (la clave nunca
+// llega al navegador) para que cualquier visitante vea las obras publicadas, sin
+// depender del RLS de user_works/profiles. No se trae `content` (queda protegido).
+export default async function IndependientesPage() {
+  const supabase = createAdminClient();
+
+  // Todas las obras publicadas (públicas y de pago) — sin el texto de la obra
   const { data: works } = await supabase
     .from('user_works')
-    .select('*')
+    .select('id, title, description, language, is_public, cover_url, price_ars, created_at, user_id')
     .eq('status', 'published')
     .order('created_at', { ascending: false });
 
@@ -27,10 +32,10 @@ export default async function IndependientesPage() {
         .in('id', userIds)
     : { data: [] };
   const profById = new Map((profs ?? []).map(p => [p.id, p]));
-  (works ?? []).forEach(w => { (w as any).profiles = profById.get(w.user_id) ?? null; });
+  const worksWithProfile: any[] = (works ?? []).map(w => ({ ...w, profiles: profById.get(w.user_id) ?? null }));
 
   // Solo obras de autores con perfil público
-  const allPublished = (works ?? []).filter(w => (w.profiles as any)?.profile_public !== false);
+  const allPublished = worksWithProfile.filter(w => w.profiles?.profile_public !== false);
 
   // Autores únicos: aparecen si tienen al menos 1 obra publicada y perfil público
   const authorMap = new Map<string, { userId: string; name: string; avatar: string | null; count: number }>();

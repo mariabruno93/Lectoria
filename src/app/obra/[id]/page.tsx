@@ -1,24 +1,28 @@
-import { createClient } from '@/lib/supabase/server';
+import { createClient, createAdminClient } from '@/lib/supabase/server';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import ObraPlayer from './ObraPlayer';
 import { hasAccess } from '@/lib/entitlements';
 
+export const dynamic = 'force-dynamic';
+
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params;
-  const supabase = await createClient();
-  const { data } = await supabase.from('user_works').select('title, description').eq('id', id).single();
+  const admin = createAdminClient();
+  const { data } = await admin.from('user_works').select('title, description').eq('id', id).single();
   if (!data) return {};
   return { title: `${data.title} — Epovox`, description: data.description ?? undefined };
 }
 
 export default async function ObraPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const supabase = await createClient();
+  // Datos públicos por admin (server-side); auth del visitante por el cliente normal.
+  const admin = createAdminClient();
+  const authClient = await createClient();
 
-  // Carga la obra sin filtrar por is_public (las privadas muestran estado bloqueado)
-  const { data: work } = await supabase
+  // Carga la obra sin filtrar por is_public (las de pago muestran estado bloqueado)
+  const { data: work } = await admin
     .from('user_works')
     .select('*')
     .eq('id', id)
@@ -28,7 +32,7 @@ export default async function ObraPage({ params }: { params: Promise<{ id: strin
   if (!work) notFound();
 
   // Perfil del autor (consulta aparte: no hay relación declarada en la DB)
-  const { data: author } = await supabase
+  const { data: author } = await admin
     .from('profiles')
     .select('display_name, avatar_url, nationality')
     .eq('id', work.user_id)
@@ -37,8 +41,8 @@ export default async function ObraPage({ params }: { params: Promise<{ id: strin
   const authorAvatar = author?.avatar_url ?? null;
 
   // Acceso: gratis, el autor, o quien la compró. Si no, queda bloqueada.
-  const { data: { user } } = await supabase.auth.getUser();
-  const access = await hasAccess(supabase, user?.id ?? null, work);
+  const { data: { user } } = await authClient.auth.getUser();
+  const access = await hasAccess(admin, user?.id ?? null, work);
   const isLocked = !access;
 
   return (
