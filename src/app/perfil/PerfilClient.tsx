@@ -25,6 +25,18 @@ export default function PerfilClient({
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState('');
+  const [libraryPrice, setLibraryPrice] = useState<string>(profile?.library_price_ars != null ? String(profile.library_price_ars) : '');
+  const [savingLib, setSavingLib] = useState(false);
+  const mpConnected = !!profile?.mp_connected;
+
+  async function handleSaveLibraryPrice() {
+    setSavingLib(true);
+    const value = libraryPrice.trim() === '' ? null : Math.max(0, parseInt(libraryPrice, 10) || 0);
+    const { error } = await supabase.from('profiles').update({ library_price_ars: value }).eq('id', user.id);
+    setMsg(error ? 'Error: ' + error.message : 'Precio de biblioteca guardado');
+    setSavingLib(false);
+    if (!error) router.refresh();
+  }
 
   async function handleAvatar(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -210,6 +222,53 @@ export default function PerfilClient({
           </div>
           <span style={{ color: '#C9933A' }}>→</span>
         </Link>
+      </div>
+
+      {/* ── Cobros (autores) ────────────────────────────────────────── */}
+      <div className="mt-10 pt-8" style={{ borderTop: '1px solid #2A2720' }}>
+        <p className="text-sm font-medium mb-1" style={{ color: '#F2EDE4' }}>💰 Cobros por tus obras</p>
+        <p className="text-xs mb-4" style={{ color: '#8A8478' }}>
+          Conectá tu Mercado Pago para vender. De cada venta recibís el 70% directo en tu cuenta; Epovox el 30%.
+        </p>
+
+        {/* Conectar Mercado Pago */}
+        <div className="flex items-center justify-between gap-4 py-3 px-4 rounded-xl mb-4"
+          style={{ background: '#1A1816', border: '1px solid #2A2720' }}>
+          <div className="flex items-center gap-2">
+            <span style={{ fontSize: 18 }}>{mpConnected ? '✅' : '🔗'}</span>
+            <span className="text-sm" style={{ color: mpConnected ? '#22c55e' : '#F2EDE4' }}>
+              {mpConnected ? 'Mercado Pago conectado' : 'Mercado Pago sin conectar'}
+            </span>
+          </div>
+          <span className="px-4 py-1.5 rounded-full text-xs font-medium"
+            style={{ background: '#2A2720', color: '#6A6460', cursor: 'not-allowed' }}>
+            {mpConnected ? 'Conectado' : 'Disponible muy pronto'}
+          </span>
+        </div>
+
+        {/* Precio de la biblioteca */}
+        <label className="block text-xs mb-1.5" style={{ color: '#8A8478' }}>
+          Precio de tu biblioteca completa (ARS) — opcional
+        </label>
+        <div className="flex items-center gap-2">
+          <span style={{ color: '#8A8478' }}>$</span>
+          <input
+            type="number" min={0} step={100}
+            value={libraryPrice}
+            onChange={e => setLibraryPrice(e.target.value)}
+            placeholder="0"
+            className="w-40 px-4 py-2.5 rounded-xl text-sm outline-none"
+            style={INPUT_STYLE}
+          />
+          <button type="button" onClick={handleSaveLibraryPrice} disabled={savingLib}
+            className="px-4 py-2.5 rounded-xl text-sm font-medium transition-opacity hover:opacity-80"
+            style={{ background: '#2A2720', color: '#F2EDE4' }}>
+            {savingLib ? 'Guardando…' : 'Guardar'}
+          </button>
+        </div>
+        <p className="text-xs mt-1.5" style={{ color: '#6A6460' }}>
+          Si lo definís, los lectores pueden comprar todas tus obras de pago de una sola vez. Editable cuando quieras.
+        </p>
       </div>
 
       {/* ── Logout ──────────────────────────────────────────────────── */}

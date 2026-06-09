@@ -14,6 +14,7 @@ type WorkData = {
   status: 'draft' | 'published' | 'archived';
   audio_url?: string | null;
   cover_url?: string | null;
+  price_ars?: number | null;
 };
 
 const INPUT  = 'w-full px-4 py-3 rounded-xl text-sm outline-none';
@@ -25,7 +26,7 @@ export default function ObraForm({ userId, initial }: { userId: string; initial?
   const isNew = !initial?.id;
 
   const [form, setForm] = useState<WorkData>(initial ?? {
-    title: '', description: '', content: '', language: 'es', is_public: false, status: 'draft', audio_url: null, cover_url: null,
+    title: '', description: '', content: '', language: 'es', is_public: false, status: 'draft', audio_url: null, cover_url: null, price_ars: null,
   });
   const [loading, setLoading]     = useState(false);
   const [deleting, setDeleting]   = useState(false);
@@ -53,6 +54,8 @@ export default function ObraForm({ userId, initial }: { userId: string; initial?
       content:     form.content.trim() || null,
       language:    form.language,
       is_public:   form.is_public,
+      // El precio solo aplica a obras de pago; si es gratis se limpia.
+      price_ars:   form.is_public ? null : (form.price_ars ?? null),
       status:      publishNow ? 'published' : form.status,
       updated_at:  new Date().toISOString(),
     };
@@ -419,6 +422,30 @@ export default function ObraForm({ userId, initial }: { userId: string; initial?
               />
             </button>
           </div>
+
+          {/* Precio — solo si es de pago */}
+          {!form.is_public && (
+            <div className="mt-4 pt-4" style={{ borderTop: '1px solid #2A2720' }}>
+              <label className="block text-xs mb-1.5" style={{ color: '#8A8478' }}>
+                Precio de esta obra (ARS)
+              </label>
+              <div className="flex items-center gap-2">
+                <span style={{ color: '#8A8478' }}>$</span>
+                <input
+                  type="number" min={0} step={100}
+                  value={form.price_ars ?? ''}
+                  onChange={e => set('price_ars', e.target.value === '' ? null : Math.max(0, parseInt(e.target.value, 10) || 0))}
+                  placeholder="0"
+                  className="w-40 px-4 py-2.5 rounded-xl text-sm outline-none"
+                  style={STYLE}
+                />
+              </div>
+              <p className="text-xs mt-1.5" style={{ color: '#6A6460' }}>
+                Lo podés cambiar cuando quieras. De cada venta, vos recibís el 70% y Epovox el 30%.
+                {(form.price_ars == null || form.price_ars <= 0) && ' Sin precio, la obra no se puede comprar todavía.'}
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Error */}

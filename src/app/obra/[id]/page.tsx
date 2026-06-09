@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import ObraPlayer from './ObraPlayer';
+import { hasAccess } from '@/lib/entitlements';
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params;
@@ -34,7 +35,11 @@ export default async function ObraPage({ params }: { params: Promise<{ id: strin
     .single();
   const authorName = author?.display_name ?? 'Autor';
   const authorAvatar = author?.avatar_url ?? null;
-  const isLocked = !work.is_public;
+
+  // Acceso: gratis, el autor, o quien la compró. Si no, queda bloqueada.
+  const { data: { user } } = await supabase.auth.getUser();
+  const access = await hasAccess(supabase, user?.id ?? null, work);
+  const isLocked = !access;
 
   return (
     <div className="max-w-2xl mx-auto px-6 py-14">
@@ -102,13 +107,23 @@ export default async function ObraPage({ params }: { params: Promise<{ id: strin
           <h2 className="text-xl font-bold mb-2" style={{ fontFamily: 'Georgia, serif', color: '#F2EDE4' }}>
             Esta obra es de pago
           </h2>
-          <p className="text-sm mb-6 max-w-xs mx-auto" style={{ color: '#8A8478' }}>
-            El autor ha elegido compartir este contenido con sus lectores más cercanos.
-            Próximamente podrás comprarlo directamente en Epovox.
-          </p>
+          {work.price_ars && work.price_ars > 0 ? (
+            <>
+              <p className="text-3xl font-bold mb-1" style={{ fontFamily: 'Georgia, serif', color: '#F2EDE4' }}>
+                ${work.price_ars.toLocaleString('es-AR')}
+              </p>
+              <p className="text-sm mb-6 max-w-xs mx-auto" style={{ color: '#8A8478' }}>
+                Comprala una vez y accedé para siempre. También podés comprar toda la biblioteca de {authorName}.
+              </p>
+            </>
+          ) : (
+            <p className="text-sm mb-6 max-w-xs mx-auto" style={{ color: '#8A8478' }}>
+              El autor todavía no definió el precio de esta obra.
+            </p>
+          )}
           <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold"
             style={{ background: '#2A2720', color: '#6A6460', cursor: 'not-allowed' }}>
-            Próximamente disponible
+            Compra disponible muy pronto
           </div>
           <p className="mt-5 text-xs" style={{ color: '#3A3728' }}>
             ¿Ya compraste esta obra?{' '}

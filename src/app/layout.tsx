@@ -8,6 +8,7 @@ import { PlayerProvider } from '@/context/PlayerContext';
 import { createClient } from '@/lib/supabase/server';
 import LibraryTracker from '@/components/LibraryTracker';
 import PrerollAd from '@/components/PrerollAd';
+import Footer from '@/components/Footer';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
@@ -46,6 +47,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <PlayerProvider>
           <Navbar />
           <main className="flex-1">{children}</main>
+          <Footer />
           <AudioPlayer />
           <PrerollAd />
           <LibraryTracker userId={userId} />

@@ -32,6 +32,7 @@ export default async function EditarObraPage({ params }: { params: Promise<{ id:
         status:      work.status ?? 'draft',
         audio_url:   work.audio_url ?? null,
         cover_url:   work.cover_url ?? null,
+        price_ars:   work.price_ars ?? null,
       }}
     />
   );
