@@ -157,23 +157,6 @@ export default async function Home() {
         <AdSlot />
       </div>
 
-      {/* ── PDF teaser ───────────────────────────────────────────────────── */}
-      <section className="py-12 px-6">
-        <div className="max-w-3xl mx-auto rounded-2xl p-8 text-center"
-          style={{ background: '#1A1816', border: '1px solid #2A2720' }}>
-          <span className="text-xs font-semibold uppercase tracking-widest px-3 py-1 rounded-full inline-block mb-4"
-            style={{ background: '#2A2720', color: '#C9933A' }}>
-            Próximamente
-          </span>
-          <h3 className="text-xl font-semibold mb-3"
-            style={{ fontFamily: 'Georgia, serif', color: '#F2EDE4' }}>
-            ¿Tenés un PDF o Word?
-          </h3>
-          <p style={{ color: '#8A8478', lineHeight: 1.7 }}>
-            Muy pronto vas a poder subir cualquier documento y convertirlo en audiolibro con voz IA en segundos.
-          </p>
-        </div>
-      </section>
     </div>
   );
 }
