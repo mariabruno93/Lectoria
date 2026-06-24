@@ -60,9 +60,15 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     pendingPlay: null,
   });
 
-  // Mostrar pre-roll antes de reproducir
+  // Reproduce directo (sin pop-up de anuncio). Los avisos van in-page.
   const play = useCallback((book: PlayerBook, chapter: PlayerChapter) => {
-    setState((prev) => ({ ...prev, showAd: true, pendingPlay: { book, chapter } }));
+    setState((prev) => {
+      if (audioRef.current) {
+        audioRef.current.src = chapter.audio_url ?? '';
+        if (chapter.audio_url) audioRef.current.play().catch(() => {});
+      }
+      return { ...prev, showAd: false, pendingPlay: null, book, chapter, isPlaying: true, currentTime: 0 };
+    });
   }, []);
 
   // Llamado cuando el usuario salta o termina el anuncio

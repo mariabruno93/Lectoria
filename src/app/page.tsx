@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import HomePageClient from '@/components/HomePageClient';
+import AdSlot from '@/components/AdSlot';
 import type { LibraryEntry } from '@/components/LibraryButtons';
 import type { Author } from '@/types';
 
@@ -150,6 +151,11 @@ export default async function Home() {
         initialLibraryMap={libraryMap}
         authors={authors}
       />
+
+      {/* Aviso in-page (AdSense) — se activa al configurar NEXT_PUBLIC_ADSENSE_SLOT */}
+      <div className="max-w-5xl mx-auto px-6">
+        <AdSlot />
+      </div>
 
       {/* ── PDF teaser ───────────────────────────────────────────────────── */}
       <section className="py-12 px-6">
