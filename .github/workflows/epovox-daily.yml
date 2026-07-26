@@ -1,10 +1,11 @@
-name: Epovox — card diaria + control de salud
+name: Epovox — control de salud (semanal) + card manual
 
-# Corre todos los días 09:00 hora Argentina (12:00 UTC).
-# También se puede disparar a mano desde la pestaña Actions (workflow_dispatch).
+# Programado: SOLO control de salud, 1 vez por semana (domingos 09:00 ART / 12:00 UTC).
+# Ya no se sube un cuento por día — el foco pasó a tráfico y suscriptores.
+# La carga de un cuento solo corre si se dispara a mano (workflow_dispatch).
 on:
   schedule:
-    - cron: "0 12 * * *"
+    - cron: "0 12 * * 0"
   workflow_dispatch:
 
 jobs:
@@ -33,9 +34,11 @@ jobs:
             echo "EPOVOX_ALERT_EMAIL=${{ secrets.EPOVOX_ALERT_EMAIL }}"
           } > .env.local
 
-      - name: Agregar 1 cuento (card diaria)
+      # Solo si se dispara a mano (no en la corrida semanal automática).
+      - name: Agregar 1 cuento (card — solo manual)
+        if: github.event_name == 'workflow_dispatch'
         run: node scripts/daily-card.mjs
 
       - name: Control de salud auto-reparador
-        if: always()   # corre aunque la card diaria falle, así igual repara lo viejo
+        if: always()   # corre siempre (semanal o manual)
         run: node scripts/health-check.mjs
