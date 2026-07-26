@@ -35,7 +35,7 @@ export default function UserWorkCard({ work }: { work: UserWork }) {
       >
         {/* Portada (si existe) */}
         {work.cover_url && (
-          <img src={work.cover_url} alt={work.title}
+          <img src={work.cover_url} alt={work.title} loading="lazy"
             className="absolute inset-0 w-full h-full object-cover" />
         )}
 

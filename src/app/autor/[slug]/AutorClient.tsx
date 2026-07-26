@@ -52,7 +52,7 @@ function WorkRow({ work, onPlay }: { work: Work; onPlay: (ch: Chapter) => void }
             style={{ background: `linear-gradient(140deg, ${work.cover_gradient_from}, ${work.cover_gradient_to})` }}
           >
             {(work as any).cover_url && (
-              <img src={(work as any).cover_url} alt={work.title} className="w-full h-full object-cover" />
+              <img src={(work as any).cover_url} alt={work.title} loading="lazy" className="w-full h-full object-cover" />
             )}
           </div>
         </Link>
