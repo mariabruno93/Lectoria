@@ -10,6 +10,9 @@ import LibraryTracker from '@/components/LibraryTracker';
 import Footer from '@/components/Footer';
 import JsonLd from '@/components/JsonLd';
 
+// ID de medición de Google Analytics 4 (público). Override opcional por env.
+const GA_ID = process.env.NEXT_PUBLIC_GA_ID ?? 'G-S9HJV78RYR';
+
 const SITE_JSONLD = {
   '@context': 'https://schema.org',
   '@type': 'WebSite',
@@ -64,17 +67,17 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           strategy="beforeInteractive"
         />
         <JsonLd data={SITE_JSONLD} />
-        {process.env.NEXT_PUBLIC_GA_ID && (
+        {GA_ID && (
           <>
             <Script
-              src={`https://www.googletagmanager.com/gtag/js?id=${process.env.NEXT_PUBLIC_GA_ID}`}
+              src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}
               strategy="afterInteractive"
             />
             <Script id="ga4" strategy="afterInteractive">
               {`window.dataLayer = window.dataLayer || [];
 function gtag(){dataLayer.push(arguments);}
 gtag('js', new Date());
-gtag('config', '${process.env.NEXT_PUBLIC_GA_ID}');`}
+gtag('config', '${GA_ID}');`}
             </Script>
           </>
         )}
