@@ -18,10 +18,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }));
 
   // Cuentos del catálogo
-  const { data: works } = await sb.from('works').select('slug, updated_at');
+  const { data: works } = await sb.from('works').select('slug');
   const workPages: MetadataRoute.Sitemap = (works ?? []).map((w) => ({
     url: `${BASE}/libro/${w.slug}`,
-    lastModified: w.updated_at ? new Date(w.updated_at) : undefined,
     changeFrequency: 'weekly',
     priority: 0.8,
   }));
