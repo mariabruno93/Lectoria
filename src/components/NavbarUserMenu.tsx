@@ -80,11 +80,6 @@ export default function NavbarUserMenu({ email, displayName, avatarUrl, isAdmin 
             style={{ color: '#F2EDE4' }}>
             ✍️ Mis obras
           </Link>
-          <Link href="/perfil/listas" onClick={() => setOpen(false)}
-            className="flex items-center gap-2 px-4 py-2 text-sm transition-colors hover:opacity-80"
-            style={{ color: '#F2EDE4' }}>
-            📚 Mis listas
-          </Link>
           <button onClick={handleLogout}
             className="flex items-center gap-2 w-full px-4 py-2 text-sm transition-colors hover:opacity-80 text-left"
             style={{ color: '#8A8478' }}>
