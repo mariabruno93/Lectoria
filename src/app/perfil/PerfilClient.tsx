@@ -240,10 +240,18 @@ export default function PerfilClient({
               {mpConnected ? 'Mercado Pago conectado' : 'Mercado Pago sin conectar'}
             </span>
           </div>
-          <span className="px-4 py-1.5 rounded-full text-xs font-medium"
-            style={{ background: '#2A2720', color: '#6A6460', cursor: 'not-allowed' }}>
-            {mpConnected ? 'Conectado' : 'Disponible muy pronto'}
-          </span>
+          {mpConnected ? (
+            <span className="px-4 py-1.5 rounded-full text-xs font-medium"
+              style={{ background: '#0A2D1A', color: '#22c55e' }}>
+              Conectado
+            </span>
+          ) : (
+            <a href="/api/mp/connect"
+              className="px-4 py-1.5 rounded-full text-xs font-semibold transition-opacity hover:opacity-80"
+              style={{ background: '#009EE3', color: '#fff' }}>
+              Conectar
+            </a>
+          )}
         </div>
 
         {/* Precio de la biblioteca */}

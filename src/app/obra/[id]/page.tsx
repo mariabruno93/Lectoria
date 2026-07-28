@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import ObraPlayer from './ObraPlayer';
+import BuyBox from './BuyBox';
 import { hasAccess } from '@/lib/entitlements';
 
 export const dynamic = 'force-dynamic';
@@ -34,7 +35,7 @@ export default async function ObraPage({ params }: { params: Promise<{ id: strin
   // Perfil del autor (consulta aparte: no hay relación declarada en la DB)
   const { data: author } = await admin
     .from('profiles')
-    .select('display_name, avatar_url, nationality')
+    .select('display_name, avatar_url, nationality, mp_connected, library_price_ars')
     .eq('id', work.user_id)
     .single();
   const authorName = author?.display_name ?? 'Autor';
@@ -111,30 +112,18 @@ export default async function ObraPage({ params }: { params: Promise<{ id: strin
           <h2 className="text-xl font-bold mb-2" style={{ fontFamily: 'Georgia, serif', color: '#F2EDE4' }}>
             Esta obra es de pago
           </h2>
-          {work.price_ars && work.price_ars > 0 ? (
-            <>
-              <p className="text-3xl font-bold mb-1" style={{ fontFamily: 'Georgia, serif', color: '#F2EDE4' }}>
-                ${work.price_ars.toLocaleString('es-AR')}
-              </p>
-              <p className="text-sm mb-6 max-w-xs mx-auto" style={{ color: '#8A8478' }}>
-                Comprala una vez y accedé para siempre. También podés comprar toda la biblioteca de {authorName}.
-              </p>
-            </>
-          ) : (
-            <p className="text-sm mb-6 max-w-xs mx-auto" style={{ color: '#8A8478' }}>
-              El autor todavía no definió el precio de esta obra.
-            </p>
-          )}
-          <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold"
-            style={{ background: '#2A2720', color: '#6A6460', cursor: 'not-allowed' }}>
-            Compra disponible muy pronto
-          </div>
-          <p className="mt-5 text-xs" style={{ color: '#3A3728' }}>
-            ¿Ya compraste esta obra?{' '}
-            <Link href="/login" className="hover:opacity-80" style={{ color: '#C9933A' }}>
-              Iniciá sesión
-            </Link>
+          <p className="text-sm mb-6 max-w-xs mx-auto" style={{ color: '#8A8478' }}>
+            Comprala una vez y accedé para siempre. El 70% va directo al autor.
           </p>
+          <BuyBox
+            workId={work.id}
+            authorId={work.user_id}
+            authorName={authorName}
+            price={work.price_ars ?? null}
+            libraryPrice={author?.library_price_ars ?? null}
+            authorConnected={!!author?.mp_connected}
+            isLoggedIn={!!user}
+          />
         </div>
       ) : (
         <>
