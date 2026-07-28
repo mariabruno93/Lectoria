@@ -1,6 +1,7 @@
 import Link from 'next/link';
 
 const links = [
+  { href: '/acerca', label: 'Acerca de' },
   { href: '/privacidad', label: 'Privacidad' },
   { href: '/terminos', label: 'Términos de compra' },
   { href: '/arrepentimiento', label: 'Botón de arrepentimiento' },

@@ -10,7 +10,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   // Páginas estáticas
   const staticPages: MetadataRoute.Sitemap = [
-    '', '/biblioteca', '/autores', '/independientes', '/privacidad', '/terminos', '/terminos-autor', '/arrepentimiento',
+    '', '/biblioteca', '/autores', '/independientes', '/acerca', '/privacidad', '/terminos', '/terminos-autor', '/arrepentimiento',
   ].map((p) => ({
     url: `${BASE}${p}`,
     changeFrequency: p === '' ? 'daily' : 'weekly',

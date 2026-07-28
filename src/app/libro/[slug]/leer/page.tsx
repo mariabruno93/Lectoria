@@ -1,8 +1,16 @@
 import { createClient } from '@/lib/supabase/server';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
+import type { Metadata } from 'next';
 
 export const dynamic = 'force-dynamic';
+
+// El lector muestra el texto completo (dominio público, no original) → no se
+// indexa para no diluir el valor del sitio. La página del cuento (/libro/[slug])
+// sí se indexa (tiene descripción y curaduría propias).
+export const metadata: Metadata = {
+  robots: { index: false, follow: true },
+};
 
 export default async function LeerPage({
   params,
