@@ -40,12 +40,18 @@ export default function ObraForm({ userId, initial }: { userId: string; initial?
   const [generatingCover, setGeneratingCover] = useState(false);
   const [uploadingCover, setUploadingCover]   = useState(false);
   const coverFileRef = useRef<HTMLInputElement>(null);
+  const [authorConsent, setAuthorConsent] = useState(false);
 
   const set = (k: keyof WorkData, v: any) => setForm(f => ({ ...f, [k]: v }));
 
   async function handleSave(e: React.FormEvent, publishNow?: boolean) {
     e.preventDefault();
     if (!form.title.trim()) { setMsg('El título es obligatorio.'); return; }
+    // Para poner una obra a la venta hace falta aceptar el Acuerdo de Autor.
+    if (publishNow && !form.is_public && !authorConsent) {
+      setMsg('Para poner tu obra a la venta, aceptá el Acuerdo de Autor.');
+      return;
+    }
     setLoading(true); setMsg('');
 
     const payload = {
@@ -65,6 +71,12 @@ export default function ObraForm({ userId, initial }: { userId: string; initial?
       : await supabase.from('user_works').update(payload).eq('id', initial!.id);
 
     if (error) { setMsg('Error: ' + error.message); setLoading(false); return; }
+
+    // Deja registro de que el autor aceptó el Acuerdo (para la obra a la venta).
+    if (publishNow && !form.is_public && authorConsent) {
+      try { await supabase.from('profiles').update({ author_terms_accepted_at: new Date().toISOString() }).eq('id', userId); } catch { /* si falta la columna, se ignora */ }
+    }
+
     router.push('/perfil/obras');
     router.refresh();
   }
@@ -444,6 +456,17 @@ export default function ObraForm({ userId, initial }: { userId: string; initial?
                 Lo podés cambiar cuando quieras. De cada venta, vos recibís el 70% y Epovox el 30%.
                 {(form.price_ars == null || form.price_ars <= 0) && ' Sin precio, la obra no se puede comprar todavía.'}
               </p>
+
+              {/* Consentimiento del autor para vender */}
+              <label className="flex items-start gap-2 mt-4 cursor-pointer">
+                <input type="checkbox" checked={authorConsent} onChange={e => setAuthorConsent(e.target.checked)}
+                  className="mt-0.5 flex-shrink-0" style={{ accentColor: '#C9933A' }} />
+                <span className="text-xs" style={{ color: '#8A8478', lineHeight: 1.5 }}>
+                  Declaro que la obra es mía y original, y acepto el{' '}
+                  <a href="/terminos-autor" target="_blank" rel="noopener noreferrer" style={{ color: '#C9933A' }}>Acuerdo de Autor</a>:
+                  autorizo a Epovox a ofrecerla a la venta y a retener su comisión del 30%.
+                </span>
+              </label>
             </div>
           )}
         </div>

@@ -152,6 +152,29 @@ export default async function Home() {
         authors={authors}
       />
 
+      {/* ── Sos autor: publicá y vendé tus obras ─────────────────────────── */}
+      <section className="py-14 px-6">
+        <div className="max-w-3xl mx-auto rounded-2xl p-8 sm:p-10 text-center"
+          style={{ background: 'linear-gradient(160deg, #2A1A08 0%, #1A1816 100%)', border: '1px solid #C9933A40' }}>
+          <p className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: '#C9933A' }}>
+            Para autores
+          </p>
+          <h2 className="text-2xl sm:text-3xl font-bold mb-3" style={{ fontFamily: 'Georgia, serif', color: '#F2EDE4' }}>
+            ¿Escribís? Publicá tus obras en Epovox
+          </h2>
+          <p className="text-base leading-7 mb-7 max-w-xl mx-auto" style={{ color: '#B4ADA2' }}>
+            Subí tus cuentos, generá el audio con IA en segundos y compartilos con la comunidad
+            —gratis o poniéndoles un precio—. De cada venta, vos cobrás el <strong style={{ color: '#F2EDE4' }}>70%</strong>,
+            directo a tu Mercado Pago.
+          </p>
+          <Link href="/perfil/obras/nueva"
+            className="inline-block px-7 py-3 rounded-full text-sm font-semibold transition-opacity hover:opacity-80"
+            style={{ background: '#C9933A', color: '#fff' }}>
+            Publicá tu primera obra
+          </Link>
+        </div>
+      </section>
+
       {/* Aviso in-page (AdSense) — se activa al configurar NEXT_PUBLIC_ADSENSE_SLOT */}
       <div className="max-w-5xl mx-auto px-6">
         <AdSlot />
