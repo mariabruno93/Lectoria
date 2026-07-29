@@ -35,10 +35,6 @@ export const metadata: Metadata = {
   title: 'Epovox — Audiolibros clásicos gratis para escuchar',
   description:
     'Escuchá gratis los grandes clásicos de la literatura narrados en audio con voz IA, en español e inglés. Cuentos de terror, misterio, drama y más.',
-  icons: {
-    icon: '/logo.png',
-    apple: '/logo.png',
-  },
   verification: process.env.GOOGLE_SITE_VERIFICATION
     ? { google: process.env.GOOGLE_SITE_VERIFICATION }
     : undefined,
