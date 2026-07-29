@@ -106,13 +106,15 @@ export default function ObraForm({ userId, initial }: { userId: string; initial?
     setUploading(true); setMsg('');
     const formData = new FormData();
     formData.append('file', file);
-    formData.append('bucket', 'audio');
+    formData.append('bucket', 'protected');
     formData.append('path', `user-works/${form.id}.mp3`);
     const res = await fetch('/api/admin/upload', { method: 'POST', body: formData });
     const data = await res.json();
-    if (data.url) {
-      set('audio_url', data.url);
-      await supabase.from('user_works').update({ audio_url: data.url }).eq('id', form.id);
+    if (!data.error) {
+      // El audio queda en el bucket privado; se sirve por el endpoint protegido.
+      const gatedUrl = `/api/obra/${form.id}/audio`;
+      set('audio_url', gatedUrl);
+      await supabase.from('user_works').update({ audio_url: gatedUrl }).eq('id', form.id);
       setMsg('Audio subido correctamente ✓');
     } else {
       setMsg('Error al subir: ' + (data.error ?? 'sin respuesta'));

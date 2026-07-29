@@ -70,24 +70,23 @@ export async function POST(req: NextRequest) {
 
     const audioBuffer = Buffer.concat(allBuffers);
 
-    // Subir a Storage
+    // Subir al bucket PRIVADO (el audio se sirve solo a quien tiene acceso).
     const admin = createAdminClient();
     const path = `user-works/${workId}.mp3`;
     const { error: uploadError } = await admin.storage
-      .from('audio')
+      .from('protected')
       .upload(path, audioBuffer, { contentType: 'audio/mpeg', upsert: true });
 
     if (uploadError) return NextResponse.json({ error: uploadError.message }, { status: 500 });
 
-    const { data } = admin.storage.from('audio').getPublicUrl(path);
-
-    // Guardar URL en la obra
+    // El audio_url apunta al endpoint protegido (no al archivo directo).
+    const gatedUrl = `/api/obra/${workId}/audio`;
     await supabase
       .from('user_works')
-      .update({ audio_url: data.publicUrl, updated_at: new Date().toISOString() })
+      .update({ audio_url: gatedUrl, updated_at: new Date().toISOString() })
       .eq('id', workId);
 
-    return NextResponse.json({ url: data.publicUrl });
+    return NextResponse.json({ url: gatedUrl });
   } catch (e: any) {
     return NextResponse.json({ error: e.message ?? 'Error generando audio' }, { status: 500 });
   }
