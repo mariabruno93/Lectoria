@@ -20,11 +20,19 @@ interface Author {
   nationality: string | null;
 }
 
+interface IndieAuthor {
+  userId: string;
+  name: string;
+  avatar: string | null;
+  count: number;
+}
+
 interface Props {
   sections: Section[];
   userId: string | null;
   initialLibraryMap: Record<string, LibraryEntry>;
   authors?: Author[];
+  indieAuthors?: IndieAuthor[];
 }
 
 /* ─── Arrow button ─────────────────────────────────────────────────────────── */
@@ -147,7 +155,9 @@ function ScrollRow({
 }
 
 /* ─── Author scroll row ────────────────────────────────────────────────────── */
-function AuthorScrollRow({ authors }: { authors: Author[] }) {
+type AuthorItem = { key: string; href: string; name: string; photo: string | null };
+
+function AuthorScrollRow({ authors }: { authors: AuthorItem[] }) {
   const rowRef = useRef<HTMLDivElement>(null);
   const [canLeft, setCanLeft] = useState(false);
   const [canRight, setCanRight] = useState(false);
@@ -190,8 +200,8 @@ function AuthorScrollRow({ authors }: { authors: Author[] }) {
       >
         {authors.map(author => (
           <Link
-            key={author.id}
-            href={`/autor/${author.slug}`}
+            key={author.key}
+            href={author.href}
             className="flex-none flex flex-col items-center gap-2 group"
             style={{ width: '88px' }}
           >
@@ -199,8 +209,8 @@ function AuthorScrollRow({ authors }: { authors: Author[] }) {
               className="w-16 h-16 rounded-full overflow-hidden flex-shrink-0 transition-transform group-hover:scale-105"
               style={{ border: '2px solid #2A2720' }}
             >
-              {author.photo_url ? (
-                <img src={author.photo_url} alt={author.name}
+              {author.photo ? (
+                <img src={author.photo} alt={author.name}
                   className="w-full h-full object-cover" loading="lazy" />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-xl font-bold"
@@ -227,25 +237,59 @@ function AuthorScrollRow({ authors }: { authors: Author[] }) {
 }
 
 /* ─── Main component ───────────────────────────────────────────────────────── */
-export default function HomePageClient({ sections, userId, initialLibraryMap, authors = [] }: Props) {
+export default function HomePageClient({ sections, userId, initialLibraryMap, authors = [], indieAuthors = [] }: Props) {
   const [libraryMap, setLibraryMap] = useState<Record<string, LibraryEntry>>(initialLibraryMap);
 
   const handleUpdate = useCallback((workId: string, entry: LibraryEntry) => {
     setLibraryMap(prev => ({ ...prev, [workId]: entry }));
   }, []);
 
-  if (sections.every(s => s.works.length === 0) && authors.length === 0) return null;
+  if (sections.every(s => s.works.length === 0) && authors.length === 0 && indieAuthors.length === 0) return null;
+
+  const classicItems: AuthorItem[] = authors.map(a => ({
+    key: a.id, href: `/autor/${a.slug}`, name: a.name, photo: a.photo_url,
+  }));
+  const indieItems: AuthorItem[] = indieAuthors.map(a => ({
+    key: a.userId, href: `/independientes/${a.userId}`, name: a.name, photo: a.avatar,
+  }));
 
   return (
     <div className="py-10 flex flex-col gap-12">
 
-      {/* ── Carrusel de autores ──────────────────────────────────────────── */}
-      {authors.length > 0 && (
+      {/* ── Autores independientes (destacados arriba) ───────────────────── */}
+      {indieItems.length > 0 && (
+        <section className="max-w-6xl mx-auto w-full px-6">
+          <div className="rounded-2xl px-5 sm:px-7 py-6"
+            style={{ background: 'linear-gradient(160deg, #2A1A0899 0%, #1A181600 100%)', border: '1px solid #C9933A33' }}>
+            <div className="flex items-center justify-between mb-5">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-widest mb-1" style={{ color: '#C9933A' }}>
+                  Comunidad
+                </p>
+                <h2 className="text-lg font-semibold" style={{ fontFamily: 'Georgia, serif', color: '#F2EDE4' }}>
+                  Autores independientes
+                </h2>
+              </div>
+              <Link
+                href="/independientes"
+                className="text-sm font-medium px-4 py-1.5 rounded-full transition-opacity hover:opacity-80 flex-shrink-0"
+                style={{ background: '#C9933A', color: '#fff' }}
+              >
+                Ver todos →
+              </Link>
+            </div>
+            <AuthorScrollRow authors={indieItems} />
+          </div>
+        </section>
+      )}
+
+      {/* ── Carrusel de autores clásicos ─────────────────────────────────── */}
+      {classicItems.length > 0 && (
         <section className="max-w-6xl mx-auto w-full px-6">
           <div className="flex items-center justify-between mb-5">
             <h2 className="text-lg font-semibold"
               style={{ fontFamily: 'Georgia, serif', color: '#F2EDE4' }}>
-              Autores
+              Autores clásicos
             </h2>
             <Link
               href="/autores"
@@ -255,7 +299,7 @@ export default function HomePageClient({ sections, userId, initialLibraryMap, au
               Ver todos →
             </Link>
           </div>
-          <AuthorScrollRow authors={authors} />
+          <AuthorScrollRow authors={classicItems} />
         </section>
       )}
 

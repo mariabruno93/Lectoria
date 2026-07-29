@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { createClient } from '@/lib/supabase/server';
+import { createClient, createAdminClient } from '@/lib/supabase/server';
 import HomePageClient from '@/components/HomePageClient';
 import AdSlot from '@/components/AdSlot';
 import type { LibraryEntry } from '@/components/LibraryButtons';
@@ -39,6 +39,21 @@ export default async function Home() {
   // Solo autores que tienen obras
   const authorIdsWithWorks = new Set(works.map(w => w.author_id).filter(Boolean));
   const authors = (authorsRaw ?? []).filter(a => authorIdsWithWorks.has(a.id));
+
+  // ─── Autores independientes (comunidad, destacados en la home) ────────────
+  // Lectura server-side con admin (RLS bloquea user_works/profiles para anónimos).
+  const admin = createAdminClient();
+  const { data: indieWorks } = await admin
+    .from('user_works').select('user_id').eq('status', 'published');
+  const indieUids = [...new Set((indieWorks ?? []).map(w => w.user_id))];
+  const { data: indieProfs } = indieUids.length
+    ? await admin.from('profiles').select('id, display_name, avatar_url, profile_public').in('id', indieUids)
+    : { data: [] };
+  const indieCounts: Record<string, number> = {};
+  (indieWorks ?? []).forEach(w => { indieCounts[w.user_id] = (indieCounts[w.user_id] ?? 0) + 1; });
+  const indieAuthors = (indieProfs ?? [])
+    .filter(p => p.profile_public !== false)
+    .map(p => ({ userId: p.id, name: p.display_name ?? 'Autor', avatar: p.avatar_url ?? null, count: indieCounts[p.id] ?? 0 }));
 
   // ─── Popularidad (plays count) ───────────────────────────────────────────
   const { data: plays } = await supabase.from('plays').select('work_id');
@@ -150,6 +165,7 @@ export default async function Home() {
         userId={userId}
         initialLibraryMap={libraryMap}
         authors={authors}
+        indieAuthors={indieAuthors}
       />
 
       {/* ── Sos autor: publicá y vendé tus obras ─────────────────────────── */}
