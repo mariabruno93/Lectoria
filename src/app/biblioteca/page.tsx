@@ -47,15 +47,9 @@ export default async function BibliotecaPage() {
         </p>
       </div>
 
-      {/* Clásicos */}
-      <h2 className="text-xs font-semibold uppercase tracking-widest mb-5" style={{ color: '#C9933A' }}>
-        Clásicos
-      </h2>
-      <BibliotecaClient allBooks={allWorks} />
-
-      {/* Obras de autores independientes */}
+      {/* Obras de autores independientes (destacadas, arriba) */}
       {indieWorks.length > 0 && (
-        <section className="mt-16">
+        <section className="mb-14">
           <h2 className="text-xs font-semibold uppercase tracking-widest mb-5" style={{ color: '#C9933A' }}>
             Obras de autores independientes · {indieWorks.length}
           </h2>
@@ -66,6 +60,12 @@ export default async function BibliotecaPage() {
           </div>
         </section>
       )}
+
+      {/* Clásicos */}
+      <h2 className="text-xs font-semibold uppercase tracking-widest mb-5" style={{ color: '#C9933A' }}>
+        Clásicos
+      </h2>
+      <BibliotecaClient allBooks={allWorks} />
     </div>
   );
 }
