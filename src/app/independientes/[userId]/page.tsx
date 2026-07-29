@@ -24,7 +24,7 @@ export default async function AutorIndependientePage({ params }: { params: Promi
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('display_name, avatar_url, nationality, bio, profile_public')
+    .select('display_name, avatar_url, nationality, bio, profile_public, phone, contact_email, instagram, website')
     .eq('id', userId)
     .single();
 
@@ -96,6 +96,40 @@ export default async function AutorIndependientePage({ params }: { params: Promi
                 style={{ color: '#8A8478', fontFamily: 'Georgia, serif' }}>
                 "{profile.bio}"
               </p>
+            )}
+
+            {/* Contacto y redes (si el autor los cargó) */}
+            {(profile.instagram || profile.website || profile.phone || profile.contact_email) && (
+              <div className="flex flex-wrap gap-3 justify-center sm:justify-start mb-5">
+                {profile.instagram && (
+                  <a href={`https://instagram.com/${profile.instagram.replace(/^@/, '')}`} target="_blank" rel="noopener noreferrer"
+                    className="text-xs px-3 py-1.5 rounded-full transition-opacity hover:opacity-80"
+                    style={{ background: '#1A1816', border: '1px solid #2A2720', color: '#C9933A' }}>
+                    📷 Instagram
+                  </a>
+                )}
+                {profile.website && (
+                  <a href={profile.website.startsWith('http') ? profile.website : `https://${profile.website}`} target="_blank" rel="noopener noreferrer"
+                    className="text-xs px-3 py-1.5 rounded-full transition-opacity hover:opacity-80"
+                    style={{ background: '#1A1816', border: '1px solid #2A2720', color: '#C9933A' }}>
+                    🌐 Sitio web
+                  </a>
+                )}
+                {profile.phone && (
+                  <a href={`https://wa.me/${profile.phone.replace(/[^0-9]/g, '')}`} target="_blank" rel="noopener noreferrer"
+                    className="text-xs px-3 py-1.5 rounded-full transition-opacity hover:opacity-80"
+                    style={{ background: '#1A1816', border: '1px solid #2A2720', color: '#C9933A' }}>
+                    💬 WhatsApp
+                  </a>
+                )}
+                {profile.contact_email && (
+                  <a href={`mailto:${profile.contact_email}`}
+                    className="text-xs px-3 py-1.5 rounded-full transition-opacity hover:opacity-80"
+                    style={{ background: '#1A1816', border: '1px solid #2A2720', color: '#C9933A' }}>
+                    ✉️ Email
+                  </a>
+                )}
+              </div>
             )}
             <div className="flex gap-6 justify-center sm:justify-start">
               <span className="text-center">

@@ -20,6 +20,10 @@ export default function PerfilClient({
   const [avatarUrl, setAvatarUrl] = useState(profile?.avatar_url ?? '');
   const [nationality, setNationality] = useState(profile?.nationality ?? '');
   const [bio, setBio] = useState(profile?.bio ?? '');
+  const [phone, setPhone] = useState(profile?.phone ?? '');
+  const [contactEmail, setContactEmail] = useState(profile?.contact_email ?? '');
+  const [instagram, setInstagram] = useState(profile?.instagram ?? '');
+  const [website, setWebsite] = useState(profile?.website ?? '');
   const [profilePublic, setProfilePublic] = useState<boolean>(profile?.profile_public ?? true);
   const [togglingPublic, setTogglingPublic] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -65,7 +69,16 @@ export default function PerfilClient({
     setSaving(true);
     const { error } = await supabase
       .from('profiles')
-      .update({ display_name: name, avatar_url: avatarUrl, nationality: nationality.trim() || null, bio: bio.trim() || null })
+      .update({
+        display_name: name,
+        avatar_url: avatarUrl,
+        nationality: nationality.trim() || null,
+        bio: bio.trim() || null,
+        phone: phone.trim() || null,
+        contact_email: contactEmail.trim() || null,
+        instagram: instagram.trim() || null,
+        website: website.trim() || null,
+      })
       .eq('id', user.id);
     setMsg(error ? 'Error: ' + error.message : '¡Perfil actualizado!');
     setSaving(false);
@@ -173,6 +186,36 @@ export default function PerfilClient({
             className={INPUT}
             style={{ ...INPUT_STYLE, resize: 'none', lineHeight: '1.6' }}
           />
+        </div>
+
+        {/* Contacto y redes (opcional, público) */}
+        <div className="pt-2">
+          <p className="text-sm font-medium mb-1" style={{ color: '#F2EDE4' }}>Contacto y redes</p>
+          <p className="text-xs mb-3" style={{ color: '#6A6460' }}>
+            Opcional. Lo que completes se muestra en tu perfil público, para que te encuentren y te contacten. Dejá vacío lo que no quieras mostrar.
+          </p>
+          <div className="flex flex-col gap-3">
+            <div>
+              <label className="block text-xs mb-1.5" style={{ color: '#8A8478' }}>Instagram</label>
+              <input value={instagram} onChange={e => setInstagram(e.target.value)}
+                placeholder="@tuusuario" className={INPUT} style={INPUT_STYLE} />
+            </div>
+            <div>
+              <label className="block text-xs mb-1.5" style={{ color: '#8A8478' }}>Sitio web</label>
+              <input value={website} onChange={e => setWebsite(e.target.value)}
+                placeholder="https://tuweb.com" className={INPUT} style={INPUT_STYLE} />
+            </div>
+            <div>
+              <label className="block text-xs mb-1.5" style={{ color: '#8A8478' }}>Teléfono / WhatsApp</label>
+              <input value={phone} onChange={e => setPhone(e.target.value)}
+                placeholder="+54 9 …" className={INPUT} style={INPUT_STYLE} />
+            </div>
+            <div>
+              <label className="block text-xs mb-1.5" style={{ color: '#8A8478' }}>Email de contacto</label>
+              <input type="email" value={contactEmail} onChange={e => setContactEmail(e.target.value)}
+                placeholder="hola@tumail.com (distinto al de tu cuenta)" className={INPUT} style={INPUT_STYLE} />
+            </div>
+          </div>
         </div>
 
         {msg && (
