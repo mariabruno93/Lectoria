@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient, createAdminClient } from '@/lib/supabase/server';
+import { r2Upload, r2GetPublicUrl } from '@/lib/r2';
 
 // La generación pasa por un Space de Hugging Face; damos margen.
 export const maxDuration = 60;
@@ -78,17 +79,17 @@ export async function POST(req: NextRequest) {
     if (!imgRes.ok) throw new Error('No se pudo descargar la portada generada');
     const imageBuffer = Buffer.from(await imgRes.arrayBuffer());
 
-    // Subir a Storage (bucket público "covers")
+    // Subir a R2 (bucket público con prefijo covers/)
     const admin = createAdminClient();
     const path = `user-works/${workId}.webp`;
-    const { error: uploadError } = await admin.storage
-      .from('covers')
-      .upload(path, imageBuffer, { contentType: 'image/webp', upsert: true });
-    if (uploadError) return NextResponse.json({ error: uploadError.message }, { status: 500 });
+    try {
+      await r2Upload('covers', path, imageBuffer, 'image/webp');
+    } catch (err) {
+      return NextResponse.json({ error: (err as Error).message }, { status: 500 });
+    }
 
     // URL pública con cache-buster para ver la portada nueva al regenerar
-    const { data } = admin.storage.from('covers').getPublicUrl(path);
-    const publicUrl = `${data.publicUrl}?v=${Date.now()}`;
+    const publicUrl = `${r2GetPublicUrl('covers', path)}?v=${Date.now()}`;
 
     await supabase
       .from('user_works')

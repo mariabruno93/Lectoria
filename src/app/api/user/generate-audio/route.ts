@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient, createAdminClient } from '@/lib/supabase/server';
+import { r2Upload } from '@/lib/r2';
 import { MsEdgeTTS, OUTPUT_FORMAT } from 'msedge-tts';
 
 const VOICES: Record<string, string> = {
@@ -70,14 +71,14 @@ export async function POST(req: NextRequest) {
 
     const audioBuffer = Buffer.concat(allBuffers);
 
-    // Subir al bucket PRIVADO (el audio se sirve solo a quien tiene acceso).
+    // Subir al bucket PRIVADO de R2 (el audio se sirve solo a quien tiene acceso).
     const admin = createAdminClient();
     const path = `user-works/${workId}.mp3`;
-    const { error: uploadError } = await admin.storage
-      .from('protected')
-      .upload(path, audioBuffer, { contentType: 'audio/mpeg', upsert: true });
-
-    if (uploadError) return NextResponse.json({ error: uploadError.message }, { status: 500 });
+    try {
+      await r2Upload('protected', path, audioBuffer, 'audio/mpeg');
+    } catch (err) {
+      return NextResponse.json({ error: (err as Error).message }, { status: 500 });
+    }
 
     // El audio_url apunta al endpoint protegido (no al archivo directo).
     const gatedUrl = `/api/obra/${workId}/audio`;

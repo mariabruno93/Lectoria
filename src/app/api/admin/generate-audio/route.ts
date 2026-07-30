@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/server';
+import { r2Upload, r2GetPublicUrl } from '@/lib/r2';
 import { MsEdgeTTS, OUTPUT_FORMAT } from 'msedge-tts';
 
 // Voces oficiales de Lectoria
@@ -67,22 +68,21 @@ export async function POST(req: NextRequest) {
 
   const audioBuffer = Buffer.concat(allBuffers);
 
-  // Subir a Supabase Storage
+  // Subir a R2 (bucket público con prefijo audio/)
   const supabase = createAdminClient();
   const path = `${workSlug}/${chapterNumber}.mp3`;
-  const { error } = await supabase.storage
-    .from('audio')
-    .upload(path, audioBuffer, { contentType: 'audio/mpeg', upsert: true });
-
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-
-  const { data } = supabase.storage.from('audio').getPublicUrl(path);
+  try {
+    await r2Upload('audio', path, audioBuffer, 'audio/mpeg');
+  } catch (err) {
+    return NextResponse.json({ error: (err as Error).message }, { status: 500 });
+  }
+  const publicUrl = r2GetPublicUrl('audio', path);
 
   // Actualizar el capítulo en la DB
   await supabase
     .from('chapters')
-    .update({ audio_url: data.publicUrl })
+    .update({ audio_url: publicUrl })
     .match({ work_id: (await supabase.from('works').select('id').eq('slug', workSlug).single()).data?.id, chapter_number: chapterNumber });
 
-  return NextResponse.json({ url: data.publicUrl });
+  return NextResponse.json({ url: publicUrl });
 }

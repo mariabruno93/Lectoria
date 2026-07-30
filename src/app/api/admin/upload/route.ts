@@ -1,4 +1,5 @@
 import { createClient, createAdminClient } from '@/lib/supabase/server';
+import { r2Upload, r2GetPublicUrl } from '@/lib/r2';
 import { NextRequest, NextResponse } from 'next/server';
 
 // Buckets y tipos permitidos (nadie puede subir a un bucket arbitrario).
@@ -63,14 +64,24 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'No tenés permiso para subir acá' }, { status: 403 });
   }
 
-  // 4) Subida.
-  const bytes = await file.arrayBuffer();
-  const { error } = await admin.storage
-    .from(bucket)
-    .upload(path, bytes, { contentType: file.type, upsert: true });
+  // 4) Subida a R2.
+  const bytes = Buffer.from(await file.arrayBuffer());
+  try {
+    await r2Upload(bucket, path, bytes, file.type);
+  } catch (err) {
+    return NextResponse.json(
+      { error: (err as Error).message ?? 'Error subiendo el archivo' },
+      { status: 500 },
+    );
+  }
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-
-  const { data } = admin.storage.from(bucket).getPublicUrl(path);
-  return NextResponse.json({ url: data.publicUrl });
+  // El bucket "protected" no tiene URL pública: el DB guarda el endpoint gated
+  // y ese endpoint genera un signed URL nuevo en cada request.
+  if (bucket === 'protected') {
+    if (!uwMatch) {
+      return NextResponse.json({ error: 'Ruta inválida para el bucket protegido' }, { status: 400 });
+    }
+    return NextResponse.json({ url: `/api/obra/${uwMatch[1]}/audio` });
+  }
+  return NextResponse.json({ url: r2GetPublicUrl(bucket, path) });
 }

@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient, createAdminClient } from '@/lib/supabase/server';
+import { r2CreateSignedUrl } from '@/lib/r2';
 import { hasAccess } from '@/lib/entitlements';
 
 // Sirve el audio de una obra de usuario SOLO a quien tiene acceso (gratis /
-// autor / comprador). El archivo vive en un bucket PRIVADO; se entrega un link
-// firmado de corta duración → no se puede descargar libremente ni compartir.
+// autor / comprador). El archivo vive en el bucket privado de R2
+// (epovox-protected); se entrega un link firmado de corta duración → no se
+// puede descargar libremente ni compartir.
 const BUCKET = 'protected';
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -27,12 +29,10 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
   if (!ok) return new NextResponse('Necesitás comprar esta obra para escucharla', { status: 403 });
 
   // Link firmado que vence en 30 minutos (no sirve para compartir permanente).
-  const { data, error } = await admin.storage
-    .from(BUCKET)
-    .createSignedUrl(`user-works/${id}.mp3`, 60 * 30);
-  if (error || !data?.signedUrl) {
+  try {
+    const signedUrl = await r2CreateSignedUrl(BUCKET, `user-works/${id}.mp3`, 60 * 30);
+    return NextResponse.redirect(signedUrl, 302);
+  } catch {
     return new NextResponse('Audio no disponible', { status: 404 });
   }
-
-  return NextResponse.redirect(data.signedUrl, 302);
 }
