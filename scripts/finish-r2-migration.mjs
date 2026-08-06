@@ -117,12 +117,15 @@ async function paso3_verificarLectura() {
     const url = await getSignedUrl(
       r2, new GetObjectCommand({ Bucket: BUCKET_PROTECTED, Key: key }), { expiresIn: 300 },
     );
-    const res = await fetch(url, { method: 'HEAD' });
+    // Tiene que ser GET: la firma incluye el método, así que un HEAD sobre una
+    // URL firmada para GET da 403. Pedimos 1 byte con Range para no bajar el MP3
+    // entero (Range no participa de la firma en las URLs presignadas).
+    const res = await fetch(url, { headers: { Range: 'bytes=0-0' } });
     if (res.ok) { console.log(`   ✓ "${w.title}" → ${res.status}`); ok++; }
     else console.error(`   ✗ "${w.title}" → ${res.status}`);
   }
   console.log(`   ${ok} audios protegidos OK · ${sinAudio} obras sin audio`);
-  return true;
+  return ok > 0 || (works ?? []).length === 0;
 }
 
 async function paso4_verificarBase() {
@@ -148,13 +151,22 @@ async function main() {
     process.exit(1);
   }
   const copiado = await paso2_copiarArchivos();
-  await paso3_verificarLectura();
+  const seLeen = await paso3_verificarLectura();
   const baseLimpia = await paso4_verificarBase();
 
   console.log('\n──────────────────────────────');
-  if (copiado && baseLimpia) {
-    console.log('✅ Migración completa. Ya se puede borrar el Storage de Supabase.');
-    console.log('   Antes de borrar: verificá epovox.com en producción.');
+  if (copiado && seLeen && baseLimpia) {
+    console.log('✅ Los datos están 100% en R2.');
+    console.log('');
+    console.log('⚠️  TODAVÍA NO BORRES el Storage de Supabase. Falta:');
+    console.log('   1. Cargar las 7 env vars de R2 en Vercel.');
+    console.log('   2. Pushear el código nuevo y esperar el deploy.');
+    console.log('   3. Verificar epovox.com: que suene un cuento y que ande');
+    console.log('      el audio de una obra de autor.');
+    console.log('');
+    console.log('   Producción todavía corre el código viejo, que para el audio');
+    console.log('   protegido firma links contra Supabase. Si borrás antes del');
+    console.log('   deploy, esos audios se rompen.');
   } else {
     console.log('⚠️  Quedaron cosas sin resolver, mirá el detalle de arriba.');
   }
